@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}BORS — Step 1: General Details{% endblock %}
+
+{% block content %}
+{% include "returns/_stepper.html" %}
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5><i class="bi bi-building me-2"></i>Step 1 — General Details</h5>
+      <div class="sub">Operator identification and annual revenue summary</div>
+    </div>
+    <div class="card-body p-4">
+
+      <div class="help-note mb-4">
+        <strong>Revenue guidance:</strong> Include online/pre-paid tickets, Young Adult and Student Card revenue for {{ form.data_year.value|default:"2024" }}, and any business park grants for running the service.
+        Do <strong>not</strong> include Free Travel Scheme payments, NTA Grant payments, contractual revenues, or private hire revenues.
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-2">
+          <label class="form-label" for="{{ form.data_year.id_for_label }}">Data Year <span class="text-danger">*</span></label>
+          {{ form.data_year }}
+          {% if form.data_year.errors %}<div class="invalid-feedback d-block">{{ form.data_year.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label" for="{{ form.operator_name.id_for_label }}">Operator's Name <span class="text-danger">*</span></label>
+          {{ form.operator_name }}
+          {% if form.operator_name.errors %}<div class="invalid-feedback d-block">{{ form.operator_name.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label" for="{{ form.trading_name.id_for_label }}">Trading Name</label>
+          {{ form.trading_name }}
+          {% if form.trading_name.errors %}<div class="invalid-feedback d-block">{{ form.trading_name.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label" for="{{ form.county.id_for_label }}">County of Establishment <span class="text-danger">*</span></label>
+          {{ form.county }}
+          {% if form.county.errors %}<div class="invalid-feedback d-block">{{ form.county.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label" for="{{ form.annual_revenue.id_for_label }}">Annual Total Ticket Revenue (€) <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <span class="input-group-text">€</span>
+            {{ form.annual_revenue }}
+          </div>
+          {% if form.annual_revenue.errors %}<div class="invalid-feedback d-block">{{ form.annual_revenue.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label d-block">TaxSaver Participant?</label>
+          <div class="form-check mt-2">
+            {{ form.taxsaver }}
+            <label class="form-check-label ms-1" for="{{ form.taxsaver.id_for_label }}">Yes, participating</label>
+          </div>
+          {% if form.taxsaver.errors %}<div class="invalid-feedback d-block">{{ form.taxsaver.errors }}</div>{% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between">
+    <a href="{% url 'index' %}" class="btn btn-nta-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Back to dashboard
+    </a>
+    <button type="submit" class="btn btn-nta-primary">
+      Continue to Licences <i class="bi bi-arrow-right ms-1"></i>
+    </button>
+  </div>
+
+</form>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}BORS — Operator Returns Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h4 mb-1" style="color: var(--nta-navy); font-weight: 700;">Operator Returns</h1>
+    <p class="text-muted mb-0" style="font-size:0.85rem;">Annual data collection from licensed bus operators</p>
+  </div>
+  <a href="{% url 'step_general_new' %}" class="btn btn-nta-primary">
+    <i class="bi bi-plus-lg me-1"></i> New Return
+  </a>
+</div>
+
+{% if returns %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5>All Returns</h5>
+    <span class="badge bg-light text-dark">{{ returns.count }} total</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Operator</th>
+          <th>Year</th>
+          <th>County</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in returns %}
+        <tr>
+          <td>
+            <div class="fw-500">{{ r.operator_name }}</div>
+            {% if r.trading_name %}<div class="text-muted" style="font-size:0.78rem;">{{ r.trading_name }}</div>{% endif %}
+          </td>
+          <td>{{ r.data_year }}</td>
+          <td>{{ r.county }}</td>
+          <td>
+            <span class="badge badge-status-{{ r.status }} px-2 py-1">
+              {{ r.get_status_display }}
+            </span>
+          </td>
+          <td style="font-size:0.82rem; color:#666;">
+            {% if r.submitted_at %}{{ r.submitted_at|date:"d M Y H:i" }}{% else %}—{% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{% url 'step_general' pk=r.pk %}" class="btn btn-sm btn-nta-secondary me-1">
+              <i class="bi bi-pencil"></i> Edit
+            </a>
+            {% if r.status == 'submitted' %}
+            <a href="{% url 'export_excel' pk=r.pk %}" class="btn btn-sm btn-outline-success">
+              <i class="bi bi-file-earmark-excel"></i> Export
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card text-center py-5">
+  <div class="card-body">
+    <i class="bi bi-inbox" style="font-size:2.5rem; color: var(--nta-border);"></i>
+    <p class="mt-3 mb-1 fw-500">No returns yet</p>
+    <p class="text-muted" style="font-size:0.85rem;">Start a new return to begin collecting operator data.</p>
+    <a href="{% url 'step_general_new' %}" class="btn btn-nta-primary mt-2">
+      <i class="bi bi-plus-lg me-1"></i> Start a Return
+    </a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

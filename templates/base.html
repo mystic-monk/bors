@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}BORS — Bus Operator Returns System{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --nta-navy: #1B3A6B;
+      --nta-teal: #007A74;
+      --nta-light: #F4F6FA;
+      --nta-border: #D0D7E3;
+    }
+
+    body {
+      background: var(--nta-light);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #1a1a2e;
+    }
+
+    .nta-header {
+      background: var(--nta-navy);
+      color: #fff;
+      padding: 0.75rem 0;
+      border-bottom: 4px solid var(--nta-teal);
+    }
+
+    .nta-header .brand {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .nta-header .sub {
+      font-size: 0.78rem;
+      opacity: 0.75;
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 1.5rem 0 1rem;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+
+    .step-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      flex-shrink: 0;
+      border: 2px solid var(--nta-border);
+      background: #fff;
+      color: #888;
+      transition: all 0.2s;
+    }
+
+    .step-label {
+      font-size: 0.75rem;
+      color: #888;
+      margin-left: 8px;
+      white-space: nowrap;
+    }
+
+    .step-connector {
+      flex: 1;
+      height: 2px;
+      background: var(--nta-border);
+      margin: 0 8px;
+    }
+
+    .step-item.active .step-circle {
+      background: var(--nta-navy);
+      border-color: var(--nta-navy);
+      color: #fff;
+    }
+
+    .step-item.active .step-label {
+      color: var(--nta-navy);
+      font-weight: 600;
+    }
+
+    .step-item.done .step-circle {
+      background: var(--nta-teal);
+      border-color: var(--nta-teal);
+      color: #fff;
+    }
+
+    .step-item.done .step-label {
+      color: var(--nta-teal);
+    }
+
+    .step-connector.done {
+      background: var(--nta-teal);
+    }
+
+    .card {
+      border: 1px solid var(--nta-border);
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .card-header {
+      background: var(--nta-navy);
+      color: #fff;
+      border-radius: 9px 9px 0 0 !important;
+      padding: 0.9rem 1.25rem;
+    }
+
+    .card-header h5 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .card-header .sub {
+      font-size: 0.78rem;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .btn-nta-primary {
+      background: var(--nta-navy);
+      border-color: var(--nta-navy);
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .btn-nta-primary:hover {
+      background: #142d55;
+      border-color: #142d55;
+      color: #fff;
+    }
+
+    .btn-nta-secondary {
+      background: transparent;
+      border-color: var(--nta-navy);
+      color: var(--nta-navy);
+      font-weight: 500;
+    }
+
+    .btn-nta-secondary:hover {
+      background: var(--nta-navy);
+      color: #fff;
+    }
+
+    .formset-row {
+      background: #fff;
+      border: 1px solid var(--nta-border);
+      border-radius: 8px;
+      padding: 1rem 1.1rem 0.5rem;
+      margin-bottom: 0.75rem;
+      position: relative;
+    }
+
+    .formset-row .delete-row {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.75rem;
+      color: #c0392b;
+      cursor: pointer;
+      font-size: 1rem;
+      background: none;
+      border: none;
+      padding: 0;
+      opacity: 0.7;
+    }
+
+    .formset-row .delete-row:hover {
+      opacity: 1;
+    }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--nta-teal);
+      border-bottom: 1px solid var(--nta-border);
+      padding-bottom: 0.35rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .help-note {
+      background: #EEF2FB;
+      border-left: 4px solid var(--nta-navy);
+      border-radius: 4px;
+      padding: 0.65rem 1rem;
+      font-size: 0.82rem;
+      color: #2c3e6b;
+    }
+
+    .form-label {
+      font-size: 0.83rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .add-row-btn {
+      border: 2px dashed var(--nta-teal);
+      color: var(--nta-teal);
+      background: transparent;
+      border-radius: 7px;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      width: 100%;
+      transition: all 0.15s;
+    }
+
+    .add-row-btn:hover {
+      background: var(--nta-teal);
+      color: #fff;
+    }
+
+    .badge-status-draft { background: #eaf0fb; color: var(--nta-navy); }
+    .badge-status-submitted { background: #e2f4f0; color: var(--nta-teal); }
+
+    footer {
+      font-size: 0.78rem;
+      color: #888;
+      text-align: center;
+      padding: 2rem 0 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="nta-header">
+  <div class="container">
+    <div class="d-flex align-items-center gap-3">
+      <div>
+        <div class="brand">National Transport Authority</div>
+        <div class="sub">Bus Operator Returns System (BORS)</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container py-4">
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% block content %}{% endblock %}
+
+</main>
+
+<footer>
+  &copy; National Transport Authority &mdash; Internal Use Only
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

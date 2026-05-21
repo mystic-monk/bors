@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}BORS — Step 2: Licence Details{% endblock %}
+
+{% block content %}
+{% include "returns/_stepper.html" %}
+
+<form method="post" id="licence-form">
+  {% csrf_token %}
+  {{ formset.management_form }}
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5><i class="bi bi-card-list me-2"></i>Step 2 — Licence Details</h5>
+      <div class="sub">{{ obj.operator_name }} &mdash; Complete one row per licence. All licences must be included even if the service did not operate.</div>
+    </div>
+    <div class="card-body p-4">
+
+      <div id="formset-container">
+        {% for form in formset %}
+          <div class="formset-row" id="row-{{ forloop.counter0 }}">
+            {% if forloop.counter > 1 %}
+              <button type="button" class="delete-row" onclick="removeRow(this)" title="Remove this licence">
+                <i class="bi bi-x-circle-fill"></i>
+              </button>
+            {% endif %}
+
+            {{ form.id }}
+            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+
+            <div class="section-label mb-2">Licence {{ forloop.counter }}</div>
+
+            <div class="row g-2 mb-2">
+              <div class="col-md-3">
+                <label class="form-label">Licence No</label>
+                {{ form.licence_no }}
+                {% if form.licence_no.errors %}<div class="invalid-feedback d-block" style="font-size:0.75rem;">{{ form.licence_no.errors }}</div>{% endif %}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Route No <span class="text-danger">*</span></label>
+                {{ form.route_no }}
+                {% if form.route_no.errors %}<div class="invalid-feedback d-block" style="font-size:0.75rem;">{{ form.route_no.errors }}</div>{% endif %}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Date Joined Scheme</label>
+                {{ form.date_joined }}
+                {% if form.date_joined.errors %}<div class="invalid-feedback d-block" style="font-size:0.75rem;">{{ form.date_joined.errors }}</div>{% endif %}
+              </div>
+              <div class="col-md-2 text-center">
+                <label class="form-label d-block">Free Travel?</label>
+                <div class="form-check d-flex justify-content-center mt-1">{{ form.on_free_travel }}</div>
+              </div>
+              <div class="col-md-2 text-center">
+                <label class="form-label d-block">YASC?</label>
+                <div class="form-check d-flex justify-content-center mt-1">{{ form.on_yasc }}</div>
+              </div>
+            </div>
+
+            <div class="row g-2 mb-2">
+              <div class="col-md-2 text-center">
+                <label class="form-label d-block">Commenced?</label>
+                <div class="form-check d-flex justify-content-center mt-1">{{ form.service_commenced }}</div>
+              </div>
+              <div class="col-md-2 text-center">
+                <label class="form-label d-block">Ceased?</label>
+                <div class="form-check d-flex justify-content-center mt-1">{{ form.service_ceased }}</div>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Date Ceased</label>
+                {{ form.date_ceased }}
+                {% if form.date_ceased.errors %}<div class="invalid-feedback d-block" style="font-size:0.75rem;">{{ form.date_ceased.errors }}</div>{% endif %}
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">Daily PVR</label>
+                {{ form.daily_pvr }}
+                {% if form.daily_pvr.errors %}<div class="invalid-feedback d-block" style="font-size:0.75rem;">{{ form.daily_pvr.errors }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="row g-2">
+              <div class="col-md-3">
+                <label class="form-label">Total Annual Passenger Journeys</label>
+                {{ form.total_passenger_journeys }}
+                {% if form.total_passenger_journeys.errors %}<div class="invalid-feedback d-block" style="font-size:0.75rem;">{{ form.total_passenger_journeys.errors }}</div>{% endif %}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Free Travel % of all journeys</label>
+                {{ form.free_travel_percent }}
+                {% if form.free_travel_percent.errors %}<div class="invalid-feedback d-block" style="font-size:0.75rem;">{{ form.free_travel_percent.errors }}</div>{% endif %}
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">KM Operated (2024)</label>
+                {{ form.km_operated }}
+                {% if form.km_operated.errors %}<div class="invalid-feedback d-block" style="font-size:0.75rem;">{{ form.km_operated.errors }}</div>{% endif %}
+              </div>
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+
+      <button type="button" class="add-row-btn mt-2" onclick="addRow()">
+        <i class="bi bi-plus-circle me-1"></i> Add another licence
+      </button>
+
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between">
+    <a href="{% url 'step_general' pk=pk %}" class="btn btn-nta-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Back
+    </a>
+    <button type="submit" class="btn btn-nta-primary">
+      Continue to Emissions <i class="bi bi-arrow-right ms-1"></i>
+    </button>
+  </div>
+
+</form>
+
+<template id="empty-form-template">
+  <div class="formset-row" id="row-__prefix__">
+    <button type="button" class="delete-row" onclick="removeRow(this)" title="Remove this licence">
+      <i class="bi bi-x-circle-fill"></i>
+    </button>
+    <div class="section-label mb-2">New Licence</div>
+    <div class="row g-2 mb-2">
+      <div class="col-md-3">
+        <label class="form-label">Licence No</label>
+        <input type="text" name="licences-__prefix__-licence_no" class="form-control form-control-sm" placeholder="Licence No">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Route No <span class="text-danger">*</span></label>
+        <input type="text" name="licences-__prefix__-route_no" class="form-control form-control-sm" placeholder="Route No" required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date Joined Scheme</label>
+        <input type="date" name="licences-__prefix__-date_joined" class="form-control form-control-sm">
+      </div>
+      <div class="col-md-2 text-center">
+        <label class="form-label d-block">Free Travel?</label>
+        <div class="form-check d-flex justify-content-center mt-1">
+          <input type="checkbox" name="licences-__prefix__-on_free_travel" class="form-check-input">
+        </div>
+      </div>
+      <div class="col-md-2 text-center">
+        <label class="form-label d-block">YASC?</label>
+        <div class="form-check d-flex justify-content-center mt-1">
+          <input type="checkbox" name="licences-__prefix__-on_yasc" class="form-check-input">
+        </div>
+      </div>
+    </div>
+    <div class="row g-2 mb-2">
+      <div class="col-md-2 text-center">
+        <label class="form-label d-block">Commenced?</label>
+        <div class="form-check d-flex justify-content-center mt-1">
+          <input type="checkbox" name="licences-__prefix__-service_commenced" class="form-check-input">
+        </div>
+      </div>
+      <div class="col-md-2 text-center">
+        <label class="form-label d-block">Ceased?</label>
+        <div class="form-check d-flex justify-content-center mt-1">
+          <input type="checkbox" name="licences-__prefix__-service_ceased" class="form-check-input">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date Ceased</label>
+        <input type="date" name="licences-__prefix__-date_ceased" class="form-control form-control-sm">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Daily PVR</label>
+        <input type="number" name="licences-__prefix__-daily_pvr" class="form-control form-control-sm" min="0">
+      </div>
+    </div>
+    <div class="row g-2">
+      <div class="col-md-3">
+        <label class="form-label">Total Annual Passenger Journeys</label>
+        <input type="number" name="licences-__prefix__-total_passenger_journeys" class="form-control form-control-sm" min="0">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Free Travel % of all journeys</label>
+        <input type="number" name="licences-__prefix__-free_travel_percent" class="form-control form-control-sm" step="0.01" min="0" max="100">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">KM Operated (2024)</label>
+        <input type="number" name="licences-__prefix__-km_operated" class="form-control form-control-sm" step="0.01" min="0">
+      </div>
+    </div>
+  </div>
+</template>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let formCount = {{ formset.total_form_count }};
+
+  function addRow() {
+    const template = document.getElementById('empty-form-template');
+    const container = document.getElementById('formset-container');
+    const clone = template.content.cloneNode(true);
+    const html = clone.querySelector('.formset-row');
+    html.innerHTML = html.innerHTML.replaceAll('__prefix__', formCount);
+    html.id = 'row-' + formCount;
+    container.appendChild(html);
+    document.getElementById('id_licences-TOTAL_FORMS').value = ++formCount;
+  }
+
+  function removeRow(btn) {
+    const row = btn.closest('.formset-row');
+    const deleteInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+    if (deleteInput) {
+      deleteInput.checked = true;
+      row.style.display = 'none';
+    } else {
+      row.remove();
+      document.getElementById('id_licences-TOTAL_FORMS').value = --formCount;
+    }
+  }
+</script>
+{% endblock %}

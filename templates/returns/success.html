@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}BORS — Return Submitted{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+  <div style="width:72px; height:72px; border-radius:50%; background:#e2f4f0; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+    <i class="bi bi-check-lg" style="font-size:2rem; color: var(--nta-teal);"></i>
+  </div>
+  <h2 style="color: var(--nta-navy); font-weight:700;">Return Submitted</h2>
+  <p class="text-muted mb-4">The return for <strong>{{ obj.operator_name }}</strong> ({{ obj.data_year }}) has been successfully submitted.</p>
+
+  <div class="card mx-auto mb-4" style="max-width:480px;">
+    <div class="card-body p-4 text-start">
+      <table class="table table-sm mb-0">
+        <tr><td class="text-muted" style="font-size:0.83rem; width:45%;">Operator</td><td class="fw-500">{{ obj.operator_name }}</td></tr>
+        {% if obj.trading_name %}<tr><td class="text-muted" style="font-size:0.83rem;">Trading as</td><td>{{ obj.trading_name }}</td></tr>{% endif %}
+        <tr><td class="text-muted" style="font-size:0.83rem;">Data year</td><td>{{ obj.data_year }}</td></tr>
+        <tr><td class="text-muted" style="font-size:0.83rem;">County</td><td>{{ obj.county }}</td></tr>
+        <tr><td class="text-muted" style="font-size:0.83rem;">Licences</td><td>{{ obj.licences.count }}</td></tr>
+        <tr><td class="text-muted" style="font-size:0.83rem;">Vehicles</td><td>{{ obj.emissions.count }}</td></tr>
+        <tr><td class="text-muted" style="font-size:0.83rem;">Submitted</td><td>{{ obj.submitted_at|date:"d M Y H:i" }}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-center gap-3">
+    <a href="{% url 'export_excel' pk=obj.pk %}" class="btn btn-outline-success">
+      <i class="bi bi-file-earmark-excel me-1"></i> Download Excel
+    </a>
+    <a href="{% url 'index' %}" class="btn btn-nta-primary">
+      <i class="bi bi-house me-1"></i> Back to dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}
