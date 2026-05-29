@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load form_extras %}
 {% block title %}BORS — Step 4: Accessibility{% endblock %}
 
 {% block content %}
@@ -11,68 +10,121 @@
 
   <div class="card mb-4">
     <div class="card-header">
-      <h5><i class="bi bi-universal-access me-2"></i>Step 4 — Accessibility</h5>
-      <div class="sub">{{ obj.operator_name }} &mdash; Complete one row per vehicle used in {{ obj.data_year }} to provide regular services.</div>
+      <h5><i class="bi bi-universal-access me-2"></i>Step 4 — Accessibility Questions</h5>
+      <div class="sub">{{ obj.operator_name }} &mdash; {{ obj.data_year }}</div>
     </div>
-    <div class="card-body p-4">
 
-      <div id="formset-container">
-        {% for form in formset %}
-          <div class="formset-row" id="row-{{ forloop.counter0 }}">
-            {% if forloop.counter > 1 %}
-              <button type="button" class="delete-row" onclick="removeRow(this)">
-                <i class="bi bi-x-circle-fill"></i>
-              </button>
-            {% endif %}
+    {# Important note banner #}
+    <div class="px-4 py-3 border-bottom d-flex align-items-start gap-2"
+         style="background:#fff8e1; border-left:4px solid #f0a500 !important;">
+      <i class="bi bi-exclamation-triangle-fill text-warning mt-1 flex-shrink-0"></i>
+      <p class="mb-0" style="font-size:0.87rem;">
+        <strong>Vehicle Detail Questions — IMPORTANT NOTE:</strong>
+        Only complete for vehicles used for regular services in {{ obj.data_year }}.
+      </p>
+    </div>
 
+    <div class="table-responsive">
+      <table class="accessibility-table table table-bordered mb-0" style="min-width:2200px; font-size:0.82rem;">
+
+        <thead>
+          {# Column headers #}
+          <tr style="background:var(--nta-teal); color:#fff; vertical-align:middle; text-align:center;">
+            <th style="width:55px;">RES ID</th>
+            <th style="width:95px;">Vehicle Reg No.</th>
+            <th style="width:120px;">Operator</th>
+            <th style="width:80px;">Make</th>
+            <th style="width:100px;">Model Version</th>
+            <th style="width:90px;">Transmission</th>
+            <th style="width:80px;">Engine Type</th>
+            <th style="width:95px;">Number of wheelchair spaces per bus?<br><small style="font-weight:400;">Please write 0 if there are no wheelchair spaces</small></th>
+            <th style="width:130px;">If there are wheelchair spaces how are they accessed:</th>
+            <th style="width:80px;">Mechanical access ramp</th>
+            <th style="width:80px;">Equipped with centre door ramps</th>
+            <th style="width:80px;">Exterior backlit route displays</th>
+            <th style="width:80px;">Interior stop displays</th>
+            <th style="width:90px;">Interior automated audible stop announcements</th>
+            <th style="width:90px;">Yellow coloured bars (handrails) that highlight the bars (handrails) grasped by people</th>
+            <th style="width:75px;">Priority seating</th>
+            <th style="width:85px;">Seat covers in a colour that contrast with the floor colour</th>
+            <th style="width:75px;">Induction Loop System</th>
+          </tr>
+
+          {# Helper text row #}
+          <tr style="background:#e8f4f4; color:#444; font-size:0.75rem; text-align:center; vertical-align:top;">
+            <td>---</td>
+            <td>---</td>
+            <td>---</td>
+            <td>---</td>
+            <td>---</td>
+            <td>---</td>
+            <td>---</td>
+            <td style="padding:4px; font-style:italic;">Number</td>
+            <td style="padding:4px; font-style:italic;">Pick from List</td>
+            <td style="padding:4px;">Y/N</td>
+            <td style="padding:4px;">Y/N</td>
+            <td style="padding:4px;">Y/N</td>
+            <td style="padding:4px;">Y/N</td>
+            <td style="padding:4px;">Y/N</td>
+            <td style="padding:4px;">Y/N</td>
+            <td style="padding:4px;">Y/N</td>
+            <td style="padding:4px;">Y/N</td>
+            <td style="padding:4px;">Y/N</td>
+          </tr>
+        </thead>
+
+        <tbody id="formset-container">
+          {% for form, emission in forms_with_emissions %}
+          <tr class="accessibility-row" id="row-{{ forloop.counter0 }}" style="vertical-align:top; background:#daeef7;">
             {{ form.id }}
-            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+            {{ form.res_id }}
+            {{ form.vehicle_reg }}
+            {% if form.instance.pk %}<td style="display:none;">{{ form.DELETE }}</td>{% endif %}
 
-            <div class="section-label mb-2">Vehicle {{ forloop.counter }}</div>
+            {# Read-only columns from emissions #}
+            <td class="align-middle px-2" style="text-align:center; font-size:0.8rem; font-weight:500; background:#f0f4ff;">
+              {% if emission %}{{ emission.res_id }}{% endif %}
+            </td>
+            <td class="align-middle px-2" style="font-size:0.8rem; background:#f0f4ff;">
+              {% if emission %}{{ emission.vehicle_reg }}{% endif %}
+            </td>
+            <td class="align-middle px-2" style="font-size:0.8rem; background:#f0f4ff;">{{ obj.operator_name }}</td>
+            <td class="align-middle px-2" style="font-size:0.8rem; background:#f0f4ff;">
+              {% if emission %}{{ emission.make }}{% endif %}
+            </td>
+            <td class="align-middle px-2" style="font-size:0.8rem; background:#f0f4ff;">
+              {% if emission %}{{ emission.model_version }}{% endif %}
+            </td>
+            <td class="align-middle px-2" style="font-size:0.8rem; background:#f0f4ff;">
+              {% if emission %}{{ emission.transmission }}{% endif %}
+            </td>
+            <td class="align-middle px-2" style="font-size:0.8rem; background:#f0f4ff;">
+              {% if emission %}{{ emission.engine_type }}{% endif %}
+            </td>
 
-            <div class="row g-2 mb-3">
-              <div class="col-md-2">
-                <label class="form-label">RES ID</label>
-                {{ form.res_id }}
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Reg No.</label>
-                {{ form.vehicle_reg }}
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Wheelchair spaces</label>
-                {{ form.wheelchair_spaces }}
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Wheelchair access type</label>
-                {{ form.wheelchair_access_type }}
-              </div>
-            </div>
+            {# Editable columns #}
+            <td class="p-1">{{ form.wheelchair_spaces }}{% if form.wheelchair_spaces.errors %}<div class="err">{{ form.wheelchair_spaces.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.wheelchair_access_type }}{% if form.wheelchair_access_type.errors %}<div class="err">{{ form.wheelchair_access_type.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.mechanical_ramp }}{% if form.mechanical_ramp.errors %}<div class="err">{{ form.mechanical_ramp.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.centre_door_ramps }}{% if form.centre_door_ramps.errors %}<div class="err">{{ form.centre_door_ramps.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.exterior_displays }}{% if form.exterior_displays.errors %}<div class="err">{{ form.exterior_displays.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.interior_stop_displays }}{% if form.interior_stop_displays.errors %}<div class="err">{{ form.interior_stop_displays.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.audio_announcements }}{% if form.audio_announcements.errors %}<div class="err">{{ form.audio_announcements.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.yellow_handrails }}{% if form.yellow_handrails.errors %}<div class="err">{{ form.yellow_handrails.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.priority_seating }}{% if form.priority_seating.errors %}<div class="err">{{ form.priority_seating.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.contrasting_seat_covers }}{% if form.contrasting_seat_covers.errors %}<div class="err">{{ form.contrasting_seat_covers.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.induction_loop }}{% if form.induction_loop.errors %}<div class="err">{{ form.induction_loop.errors.0 }}</div>{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="18" class="text-center text-muted py-3" style="font-size:0.85rem;">
+              No vehicles found. Please complete Step 3 (Emissions) first to add vehicles.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
 
-            <div class="section-label">Features</div>
-            <div class="row g-2">
-              {% for field_name, label in features %}
-                <div class="col-md-3 col-6">
-                  <div class="d-flex align-items-center gap-2 p-2" style="background:#F8F9FB; border-radius:6px; border:1px solid var(--nta-border);">
-                    {{ form|get_field:field_name }}
-                    <label class="form-check-label" style="font-size:0.78rem; line-height:1.3;" for="{{ form|field_id:field_name }}">{{ label }}</label>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-
-            {% if form.errors %}
-              <div class="alert alert-danger mt-2 py-2" style="font-size:0.8rem;">{{ form.errors }}</div>
-            {% endif %}
-
-          </div>
-        {% endfor %}
-      </div>
-
-      <button type="button" class="add-row-btn mt-2" onclick="addRow()">
-        <i class="bi bi-plus-circle me-1"></i> Add another vehicle
-      </button>
-
+      </table>
     </div>
   </div>
 
@@ -80,65 +132,19 @@
     <a href="{% url 'step_emissions' pk=pk %}" class="btn btn-nta-secondary">
       <i class="bi bi-arrow-left me-1"></i> Back
     </a>
-    <button type="submit" class="btn btn-success px-4">
-      <i class="bi bi-check-circle me-1"></i> Submit Return
+    <button type="submit" class="btn btn-nta-primary px-4">
+      Next: Declaration <i class="bi bi-arrow-right ms-1"></i>
     </button>
   </div>
 
 </form>
 
-<template id="empty-form-template">
-  <div class="formset-row">
-    <button type="button" class="delete-row" onclick="removeRow(this)"><i class="bi bi-x-circle-fill"></i></button>
-    <div class="section-label mb-2">New Vehicle</div>
-    <div class="row g-2 mb-3">
-      <div class="col-md-2"><label class="form-label">RES ID</label><input type="text" name="accessibility-__prefix__-res_id" class="form-control form-control-sm" placeholder="RES ID"></div>
-      <div class="col-md-2"><label class="form-label">Reg No.</label><input type="text" name="accessibility-__prefix__-vehicle_reg" class="form-control form-control-sm" placeholder="Reg No."></div>
-      <div class="col-md-2"><label class="form-label">Wheelchair spaces</label><input type="number" name="accessibility-__prefix__-wheelchair_spaces" class="form-control form-control-sm" min="0"></div>
-      <div class="col-md-4"><label class="form-label">Wheelchair access type</label>
-        <select name="accessibility-__prefix__-wheelchair_access_type" class="form-select form-select-sm">
-          <option value="">--</option>
-          <option value="Low-floor">Low-floor vehicle</option>
-          <option value="Lift">Vehicle with lift</option>
-          <option value="Both">Both low-floor and lift</option>
-          <option value="None">Not wheelchair accessible</option>
-        </select>
-      </div>
-    </div>
-    <div class="section-label">Features</div>
-    <div class="row g-2">
-      {% for fname, flabel in features %}
-      <div class="col-md-3 col-6">
-        <div class="d-flex align-items-center gap-2 p-2" style="background:#F8F9FB; border-radius:6px; border:1px solid var(--nta-border);">
-          <input type="checkbox" name="accessibility-__prefix__-{{ fname }}" class="form-check-input">
-          <label style="font-size:0.78rem; line-height:1.3;">{{ flabel }}</label>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-</template>
+<style>
+  .accessibility-table td, .accessibility-table th { border-color: var(--nta-border) !important; }
+  .accessibility-table tbody tr td { background: #daeef7; }
+  .accessibility-table tbody tr td[style*="#f0f4ff"] { background: #f0f4ff !important; }
+  .accessibility-table .form-control, .accessibility-table .form-select { font-size: 0.8rem; min-width: 70px; }
+  .err { color: #c0392b; font-size: 0.72rem; margin-top: 2px; line-height: 1.2; }
+</style>
 
-{% endblock %}
-
-{% block scripts %}
-<script>
-  let formCount = {{ formset.total_form_count }};
-  function addRow() {
-    const template = document.getElementById('empty-form-template');
-    const container = document.getElementById('formset-container');
-    const clone = template.content.cloneNode(true);
-    const row = clone.querySelector('.formset-row');
-    row.innerHTML = row.innerHTML.replaceAll('__prefix__', formCount);
-    row.id = 'row-' + formCount;
-    container.appendChild(row);
-    document.getElementById('id_accessibility-TOTAL_FORMS').value = ++formCount;
-  }
-  function removeRow(btn) {
-    const row = btn.closest('.formset-row');
-    const del = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
-    if (del) { del.checked = true; row.style.display = 'none'; }
-    else { row.remove(); document.getElementById('id_accessibility-TOTAL_FORMS').value = --formCount; }
-  }
-</script>
 {% endblock %}

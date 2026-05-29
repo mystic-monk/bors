@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% block title %}BORS — Access Token Manager{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h4 mb-1" style="color:var(--nta-navy); font-weight:700;">
+      <i class="bi bi-key me-2"></i>Access Token Manager
+    </h1>
+    <p class="text-muted mb-0" style="font-size:0.85rem;">
+      Generate tokens for operators, copy the ready-made email, and send manually.
+    </p>
+  </div>
+  <div class="d-flex gap-2 align-items-center flex-wrap">
+    <a href="{% url 'admin_seed_import' %}" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-cloud-upload me-1"></i> Seed Data
+    </a>
+    <a href="{% url 'export_all_excel' %}" class="btn btn-sm" style="background:#1a7a4a; color:#fff; border:none;">
+      <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download All (Excel)
+    </a>
+    <a href="{% url 'export_all_json' %}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-filetype-json me-1"></i> Download All (JSON)
+    </a>
+    {% if accesses %}
+    <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#regenAllModal">
+      <i class="bi bi-arrow-repeat me-1"></i> Regenerate All Tokens
+    </button>
+    {% endif %}
+  </div>
+</div>
+
+{# ── Add operator form ── #}
+<div class="card mb-4">
+  <div class="card-header">
+    <h5>Add New Operator</h5>
+    <div class="sub">A unique access token is generated automatically on save.</div>
+  </div>
+  <div class="card-body">
+    <form method="post" class="row g-3 align-items-end">
+      {% csrf_token %}
+      <div class="col-md-4">
+        <label class="form-label">Operator Name</label>
+        {{ form.operator_name }}
+        {% if form.operator_name.errors %}
+          <div class="text-danger" style="font-size:0.8rem;">{{ form.operator_name.errors.0 }}</div>
+        {% endif %}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Email Address</label>
+        {{ form.operator_email }}
+        {% if form.operator_email.errors %}
+          <div class="text-danger" style="font-size:0.8rem;">{{ form.operator_email.errors.0 }}</div>
+        {% endif %}
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-nta-primary w-100">
+          <i class="bi bi-plus-lg me-1"></i> Generate Token
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ── Token table ── #}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5>Operator Tokens</h5>
+    <span class="badge bg-light text-dark">{{ accesses.count }} total</span>
+  </div>
+
+  {% if accesses %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle" style="font-size:0.88rem;">
+      <thead class="table-light">
+        <tr>
+          <th style="width:16%;">Operator</th>
+          <th style="width:15%;">Email</th>
+          <th>Token <span style="font-weight:400;color:#888;">— click to copy</span></th>
+          <th style="width:10%;">Return</th>
+          <th style="width:8%;">Status</th>
+          <th style="width:9%;">Last used</th>
+          <th style="width:18%; text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in accesses %}
+        <tr class="{% if not a.is_active %}table-secondary{% endif %}">
+          <td><div class="fw-500">{{ a.operator_name }}</div></td>
+          <td style="color:#555; font-size:0.82rem;">{{ a.operator_email }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <code
+                class="token-code"
+                data-token="{{ a.token }}"
+                title="Click to copy"
+                style="
+                  cursor:pointer;
+                  background:{% if a.is_active %}#eef2fb{% else %}#f0f0f0{% endif %};
+                  border:1px solid {% if a.is_active %}#c5d0e8{% else %}#ddd{% endif %};
+                  border-radius:4px; padding:3px 10px;
+                  font-size:0.8em; letter-spacing:0.02em; user-select:all;
+                  {% if not a.is_active %}color:#aaa;{% endif %}
+                "
+              >{{ a.token }}</code>
+              <button class="btn-icon copy-btn" data-token="{{ a.token }}" title="Copy token">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </td>
+          <td>
+            {% if a.operator_return %}
+              <span class="badge badge-status-{{ a.operator_return.status }} px-2 py-1">
+                {{ a.operator_return.get_status_display }}
+              </span>
+            {% else %}
+              <span style="color:#bbb; font-size:0.82rem;">None yet</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if a.is_active %}
+              <span class="badge" style="background:#e2f4f0;color:#007A74;font-size:0.78rem;">Active</span>
+            {% else %}
+              <span class="badge" style="background:#f5e6e6;color:#c0392b;font-size:0.78rem;">Revoked</span>
+            {% endif %}
+          </td>
+          <td style="color:#888; font-size:0.78rem;">
+            {% if a.last_accessed_at %}{{ a.last_accessed_at|date:"d M Y" }}{% else %}Never{% endif %}
+          </td>
+          <td class="text-end">
+            <div class="d-flex justify-content-end gap-1">
+
+              {# Copy email button #}
+              <button
+                class="btn-icon copy-email-btn"
+                title="Copy email to clipboard"
+                data-name="{{ a.operator_name }}"
+                data-email="{{ a.operator_email }}"
+                data-token="{{ a.token }}"
+              >
+                <i class="bi bi-envelope"></i> Copy Email
+              </button>
+
+              {# Regenerate token #}
+              <form method="post" action="{% url 'regenerate_token' pk=a.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-icon text-warning" title="Generate a new token for this operator"
+                  onclick="return confirm('Regenerate token for {{ a.operator_name }}? Their old token will stop working immediately.')">
+                  <i class="bi bi-arrow-repeat"></i>
+                </button>
+              </form>
+
+              {# Revoke / Restore #}
+              <form method="post" action="{% url 'toggle_access' pk=a.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-icon {% if a.is_active %}text-danger{% else %}text-success{% endif %}"
+                  title="{% if a.is_active %}Revoke access{% else %}Restore access{% endif %}">
+                  {% if a.is_active %}
+                    <i class="bi bi-slash-circle"></i>
+                  {% else %}
+                    <i class="bi bi-check-circle"></i>
+                  {% endif %}
+                </button>
+              </form>
+
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-body text-center py-5">
+    <i class="bi bi-key" style="font-size:2rem; color:var(--nta-border);"></i>
+    <p class="mt-3 mb-0 text-muted" style="font-size:0.88rem;">No operators yet. Add one above.</p>
+  </div>
+  {% endif %}
+</div>
+
+{# ── Regenerate All confirmation modal ── #}
+<div class="modal fade" id="regenAllModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background:var(--nta-navy); color:#fff; border-radius:9px 9px 0 0;">
+        <h5 class="modal-title"><i class="bi bi-arrow-repeat me-2"></i>Regenerate All Tokens</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>This will generate a <strong>new token for every operator</strong>. All existing tokens will stop working immediately.</p>
+        <p class="mb-0" style="font-size:0.85rem; color:#c0392b;">
+          <i class="bi bi-exclamation-triangle me-1"></i>
+          Do this at the start of each new collection year, then send fresh tokens to all operators.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-nta-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form method="post" action="{% url 'regenerate_all_tokens' %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-arrow-repeat me-1"></i> Yes, regenerate all
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Toast ── #}
+<div id="copyToast"
+  style="display:none; position:fixed; bottom:1.5rem; right:1.5rem;
+    background:var(--nta-navy); color:#fff; padding:0.6rem 1.2rem;
+    border-radius:6px; font-size:0.85rem; z-index:9999;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+  <i class="bi bi-check-circle me-1"></i> <span id="toastMsg">Copied!</span>
+</div>
+
+<style>
+  .btn-icon {
+    background: none;
+    border: 1px solid var(--nta-border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.78rem;
+    color: var(--nta-navy);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-icon:hover { background: #f0f4ff; }
+  .btn-icon.text-warning { color: #b07800 !important; border-color: #e8c96b; }
+  .btn-icon.text-warning:hover { background: #fffbea; }
+  .btn-icon.text-danger  { color: #c0392b !important; border-color: #f5c6c6; }
+  .btn-icon.text-danger:hover  { background: #fff5f5; }
+  .btn-icon.text-success { color: #1a7a4a !important; border-color: #b2dfc7; }
+  .btn-icon.text-success:hover { background: #f0fff6; }
+</style>
+
+<script>
+  const SITE_URL = window.location.origin;
+
+  function showToast(msg) {
+    const toast = document.getElementById('copyToast');
+    document.getElementById('toastMsg').textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 2500);
+  }
+
+  function copyText(text, msg) {
+    navigator.clipboard.writeText(text).then(() => showToast(msg));
+  }
+
+  document.querySelectorAll('.copy-btn').forEach(btn =>
+    btn.addEventListener('click', () => copyText(btn.dataset.token, 'Token copied!'))
+  );
+
+  document.querySelectorAll('.token-code').forEach(code =>
+    code.addEventListener('click', () => copyText(code.dataset.token, 'Token copied!'))
+  );
+
+  document.querySelectorAll('.copy-email-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const name  = this.dataset.name;
+      const email = this.dataset.email;
+      const token = this.dataset.token;
+      const url   = SITE_URL + '/access/';
+      const body  =
+`To: ${email}
+Subject: BORS 2025 – Your Access Code
+
+Dear ${name},
+
+Please find your access code for the National Transport Authority Bus Operator Returns System (BORS) below.
+
+    Access Code: ${token}
+
+To complete your return, visit the following link and enter your access code when prompted:
+
+    ${url}
+
+If you have any difficulty accessing the system or have not received this in error, please contact us at busoperatorreturns@nationaltransport.ie
+
+Kind regards,
+National Transport Authority`;
+
+      copyText(body, 'Email text copied — paste into your email client');
+    });
+  });
+</script>
+
+{% endblock %}

@@ -13,95 +13,106 @@
       <h5><i class="bi bi-bus-front me-2"></i>Step 3 — Emissions</h5>
       <div class="sub">{{ obj.operator_name }} &mdash; Complete one row per vehicle used in {{ obj.data_year }} to provide regular services.</div>
     </div>
-    <div class="card-body p-4">
 
-      <div id="formset-container">
-        {% for form in formset %}
-          <div class="formset-row" id="row-{{ forloop.counter0 }}">
-            {% if forloop.counter > 1 %}
-              <button type="button" class="delete-row" onclick="removeRow(this)" title="Remove this vehicle">
+    <div class="table-responsive">
+      <table class="emission-table table table-bordered mb-0" style="min-width:1800px; font-size:0.82rem;">
+
+        <thead>
+          {# Main header row #}
+          <tr style="background:var(--nta-teal); color:#fff; vertical-align:middle; text-align:center;">
+            <th style="width:70px;">RES ID</th>
+            <th style="width:90px;">Vehicle Reg No.</th>
+            <th style="width:90px;">Regularly Deployed on Scheduled Services<br><small style="font-weight:400;">(Yes / No)</small></th>
+            <th style="width:90px;">Make</th>
+            <th style="width:110px;">Model Version</th>
+            <th style="width:100px;">Transmission</th>
+            <th style="width:90px;">Engine Type</th>
+            <th style="width:90px;">Are the Make/Model/Engine Type Correct</th>
+            <th style="width:90px;">Fuel Type</th>
+            <th style="width:100px;">Euro Emission Standard</th>
+            <th style="width:80px;">Number of Seats per bus on record</th>
+            <th style="width:80px;">Correct Number of Seats</th>
+            <th style="width:80px;">Vehicle with AVL/GPS on Board<br><small style="font-weight:400;">(Y/N)</small></th>
+            {% if routes %}
+              <th colspan="{{ routes|length }}" style="background:#3a7a6a;">
+                How often was this bus used on the below route?<br>
+                <small style="font-weight:400;">Please fill in the % used in the yellow box under each route number</small>
+              </th>
+            {% endif %}
+            <th style="width:36px;"></th>
+          </tr>
+
+          {# Helper text row #}
+          <tr style="background:#e8f4f4; color:#444; font-size:0.75rem; text-align:center; vertical-align:top;">
+            <td>---</td>
+            <td>---</td>
+            <td>---</td>
+            <td>---</td>
+            <td>---</td>
+            <td>---</td>
+            <td>---</td>
+            <td style="padding:4px;">Y/N</td>
+            <td style="padding:4px; font-style:italic;">Complete if fuel type is not standard, e.g. HVO</td>
+            <td style="padding:4px; font-style:italic;">If known, pick from drop down list</td>
+            <td>---</td>
+            <td style="padding:4px; font-style:italic;">Complete if prefilled figure is wrong</td>
+            <td style="padding:4px;">Y/N</td>
+            {% for route in routes %}
+              <td style="background:#fff9c4; font-weight:bold; padding:4px;">{{ route }}</td>
+            {% endfor %}
+            <td></td>
+          </tr>
+        </thead>
+
+        <tbody id="formset-container">
+          {% for form, route_data in forms_with_usages %}
+          <tr class="emission-row" id="row-{{ forloop.counter0 }}" style="vertical-align:top; background:#daeef7;">
+            {{ form.id }}
+            {% if form.instance.pk %}<td style="display:none;">{{ form.DELETE }}</td>{% endif %}
+
+            <td class="p-1">{{ form.res_id }}{% if form.res_id.errors %}<div class="err">{{ form.res_id.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.vehicle_reg }}{% if form.vehicle_reg.errors %}<div class="err">{{ form.vehicle_reg.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.regularly_deployed }}{% if form.regularly_deployed.errors %}<div class="err">{{ form.regularly_deployed.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.make }}{% if form.make.errors %}<div class="err">{{ form.make.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.model_version }}{% if form.model_version.errors %}<div class="err">{{ form.model_version.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.transmission }}{% if form.transmission.errors %}<div class="err">{{ form.transmission.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.engine_type }}{% if form.engine_type.errors %}<div class="err">{{ form.engine_type.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.make_model_correct }}{% if form.make_model_correct.errors %}<div class="err">{{ form.make_model_correct.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.fuel_type }}{% if form.fuel_type.errors %}<div class="err">{{ form.fuel_type.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.euro_standard }}{% if form.euro_standard.errors %}<div class="err">{{ form.euro_standard.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.seats_on_record }}{% if form.seats_on_record.errors %}<div class="err">{{ form.seats_on_record.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.correct_seats }}{% if form.correct_seats.errors %}<div class="err">{{ form.correct_seats.errors.0 }}</div>{% endif %}</td>
+            <td class="p-1">{{ form.avl_gps }}{% if form.avl_gps.errors %}<div class="err">{{ form.avl_gps.errors.0 }}</div>{% endif %}</td>
+
+            {% for route_no, ri, pct in route_data %}
+            <td class="p-1" style="background:#fff9c4;">
+              <input type="number" step="0.01" min="0" max="100"
+                     name="route_pct_{{ forloop.parentloop.counter0 }}_{{ ri }}"
+                     class="form-control form-control-sm"
+                     placeholder="0"
+                     {% if pct != '' %}value="{{ pct }}"{% endif %}>
+            </td>
+            {% endfor %}
+
+            <td class="text-center align-middle p-1">
+              {% if forloop.counter > 1 %}
+              <button type="button" onclick="removeRow(this)" title="Remove row"
+                style="background:none; border:none; color:#c0392b; cursor:pointer; font-size:1rem; padding:0;">
                 <i class="bi bi-x-circle-fill"></i>
               </button>
-            {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
 
-            {{ form.id }}
-            {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+      </table>
+    </div>
 
-            <div class="section-label mb-2">Vehicle {{ forloop.counter }}</div>
-
-            <div class="row g-2 mb-2">
-              <div class="col-md-2">
-                <label class="form-label">RES ID</label>
-                {{ form.res_id }}
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Reg No.</label>
-                {{ form.vehicle_reg }}
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Make</label>
-                {{ form.make }}
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Model / Version</label>
-                {{ form.model_version }}
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Transmission</label>
-                {{ form.transmission }}
-              </div>
-            </div>
-
-            <div class="row g-2 mb-2">
-              <div class="col-md-3">
-                <label class="form-label">Engine Type</label>
-                {{ form.engine_type }}
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Fuel Type</label>
-                {{ form.fuel_type }}
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">Euro Emission Standard</label>
-                {{ form.euro_standard }}
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Seats on record</label>
-                {{ form.seats_on_record }}
-              </div>
-              <div class="col-md-2">
-                <label class="form-label">Correct seats</label>
-                {{ form.correct_seats }}
-              </div>
-            </div>
-
-            <div class="row g-2">
-              <div class="col-md-3 text-center">
-                <label class="form-label d-block">Regularly deployed?</label>
-                <div class="form-check d-flex justify-content-center mt-1">{{ form.regularly_deployed }}</div>
-              </div>
-              <div class="col-md-3 text-center">
-                <label class="form-label d-block">Make/model correct?</label>
-                <div class="form-check d-flex justify-content-center mt-1">{{ form.make_model_correct }}</div>
-              </div>
-              <div class="col-md-3 text-center">
-                <label class="form-label d-block">AVL/GPS on board?</label>
-                <div class="form-check d-flex justify-content-center mt-1">{{ form.avl_gps }}</div>
-              </div>
-            </div>
-
-            {% if form.errors %}
-              <div class="alert alert-danger mt-2 py-2" style="font-size:0.8rem;">{{ form.errors }}</div>
-            {% endif %}
-
-          </div>
-        {% endfor %}
-      </div>
-
-      <button type="button" class="add-row-btn mt-2" onclick="addRow()">
+    <div class="px-4 py-3">
+      <button type="button" class="add-row-btn" onclick="addRow()">
         <i class="bi bi-plus-circle me-1"></i> Add another vehicle
       </button>
-
     </div>
   </div>
 
@@ -116,40 +127,64 @@
 
 </form>
 
-<template id="empty-form-template">
-  <div class="formset-row">
-    <button type="button" class="delete-row" onclick="removeRow(this)">
-      <i class="bi bi-x-circle-fill"></i>
-    </button>
-    <div class="section-label mb-2">New Vehicle</div>
-    <div class="row g-2 mb-2">
-      <div class="col-md-2"><label class="form-label">RES ID</label><input type="text" name="emissions-__prefix__-res_id" class="form-control form-control-sm" placeholder="RES ID"></div>
-      <div class="col-md-2"><label class="form-label">Reg No.</label><input type="text" name="emissions-__prefix__-vehicle_reg" class="form-control form-control-sm" placeholder="Reg No."></div>
-      <div class="col-md-2"><label class="form-label">Make</label><input type="text" name="emissions-__prefix__-make" class="form-control form-control-sm" placeholder="Make"></div>
-      <div class="col-md-3"><label class="form-label">Model / Version</label><input type="text" name="emissions-__prefix__-model_version" class="form-control form-control-sm" placeholder="Model"></div>
-      <div class="col-md-3"><label class="form-label">Transmission</label><input type="text" name="emissions-__prefix__-transmission" class="form-control form-control-sm" placeholder="e.g. Automatic"></div>
-    </div>
-    <div class="row g-2 mb-2">
-      <div class="col-md-3"><label class="form-label">Engine Type</label><input type="text" name="emissions-__prefix__-engine_type" class="form-control form-control-sm" placeholder="Engine type"></div>
-      <div class="col-md-2"><label class="form-label">Fuel Type</label>
-        <select name="emissions-__prefix__-fuel_type" class="form-select form-select-sm">
-          <option value="">--</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="Electric">Electric</option><option value="Hybrid">Hybrid</option>
-        </select>
-      </div>
-      <div class="col-md-3"><label class="form-label">Euro Standard</label>
-        <select name="emissions-__prefix__-euro_standard" class="form-select form-select-sm">
-          <option value="">Not known</option><option>Euro I</option><option>Euro II</option><option>Euro III</option><option>Euro IV</option><option>Euro V</option><option>Euro VI</option><option>Euro VII</option>
-        </select>
-      </div>
-      <div class="col-md-2"><label class="form-label">Seats on record</label><input type="number" name="emissions-__prefix__-seats_on_record" class="form-control form-control-sm" min="0"></div>
-      <div class="col-md-2"><label class="form-label">Correct seats</label><input type="number" name="emissions-__prefix__-correct_seats" class="form-control form-control-sm" min="0"></div>
-    </div>
-    <div class="row g-2">
-      <div class="col-md-3 text-center"><label class="form-label d-block">Regularly deployed?</label><div class="form-check d-flex justify-content-center mt-1"><input type="checkbox" name="emissions-__prefix__-regularly_deployed" class="form-check-input"></div></div>
-      <div class="col-md-3 text-center"><label class="form-label d-block">Make/model correct?</label><div class="form-check d-flex justify-content-center mt-1"><input type="checkbox" name="emissions-__prefix__-make_model_correct" class="form-check-input"></div></div>
-      <div class="col-md-3 text-center"><label class="form-label d-block">AVL/GPS on board?</label><div class="form-check d-flex justify-content-center mt-1"><input type="checkbox" name="emissions-__prefix__-avl_gps" class="form-check-input"></div></div>
-    </div>
-  </div>
+<style>
+  .emission-table td, .emission-table th { border-color: var(--nta-border) !important; }
+  .emission-table tbody tr td { background: #daeef7; }
+  .emission-table .form-control, .emission-table .form-select { font-size: 0.8rem; min-width: 70px; }
+  .err { color: #c0392b; font-size: 0.72rem; margin-top: 2px; line-height: 1.2; }
+</style>
+
+{# JS template for new rows — route columns are baked in from server-side context #}
+<template id="empty-row-template">
+  <tr class="emission-row" style="vertical-align:top; background:#daeef7;">
+    <input type="hidden" name="emissions-__prefix__-id" value="">
+    <td class="p-1"><input type="text" name="emissions-__prefix__-res_id" class="form-control form-control-sm" placeholder="RES ID"></td>
+    <td class="p-1"><input type="text" name="emissions-__prefix__-vehicle_reg" class="form-control form-control-sm" placeholder="Reg No."></td>
+    <td class="p-1">
+      <select name="emissions-__prefix__-regularly_deployed" class="form-select form-select-sm">
+        <option value="">— Select —</option><option value="true">Yes</option><option value="false">No</option>
+      </select>
+    </td>
+    <td class="p-1"><input type="text" name="emissions-__prefix__-make" class="form-control form-control-sm" placeholder="Make"></td>
+    <td class="p-1"><input type="text" name="emissions-__prefix__-model_version" class="form-control form-control-sm" placeholder="Model"></td>
+    <td class="p-1"><input type="text" name="emissions-__prefix__-transmission" class="form-control form-control-sm" placeholder="e.g. Automatic"></td>
+    <td class="p-1"><input type="text" name="emissions-__prefix__-engine_type" class="form-control form-control-sm" placeholder="Engine type"></td>
+    <td class="p-1">
+      <select name="emissions-__prefix__-make_model_correct" class="form-select form-select-sm">
+        <option value="">— Select —</option><option value="true">Yes</option><option value="false">No</option>
+      </select>
+    </td>
+    <td class="p-1">
+      <select name="emissions-__prefix__-fuel_type" class="form-select form-select-sm">
+        <option value="">--</option><option value="Petrol">Petrol</option><option value="Diesel">Diesel</option><option value="Electric">Electric</option><option value="Hybrid">Hybrid</option>
+      </select>
+    </td>
+    <td class="p-1">
+      <select name="emissions-__prefix__-euro_standard" class="form-select form-select-sm">
+        <option value="">Not known</option><option>Euro I</option><option>Euro II</option><option>Euro III</option><option>Euro IV</option><option>Euro V</option><option>Euro VI</option><option>Euro VII</option>
+      </select>
+    </td>
+    <td class="p-1"><input type="number" name="emissions-__prefix__-seats_on_record" class="form-control form-control-sm" min="0" placeholder="On record"></td>
+    <td class="p-1"><input type="number" name="emissions-__prefix__-correct_seats" class="form-control form-control-sm" min="0" placeholder="Correct no."></td>
+    <td class="p-1">
+      <select name="emissions-__prefix__-avl_gps" class="form-select form-select-sm">
+        <option value="">— Select —</option><option value="true">Yes</option><option value="false">No</option>
+      </select>
+    </td>
+    {% for route in routes %}
+    <td class="p-1" style="background:#fff9c4;">
+      <input type="number" step="0.01" min="0" max="100"
+             name="route_pct___prefix___{{ forloop.counter0 }}"
+             class="form-control form-control-sm" placeholder="0">
+    </td>
+    {% endfor %}
+    <td class="text-center align-middle p-1">
+      <button type="button" onclick="removeRow(this)" title="Remove row"
+        style="background:none; border:none; color:#c0392b; cursor:pointer; font-size:1rem; padding:0;">
+        <i class="bi bi-x-circle-fill"></i>
+      </button>
+    </td>
+  </tr>
 </template>
 
 {% endblock %}
@@ -157,18 +192,20 @@
 {% block scripts %}
 <script>
   let formCount = {{ formset.total_form_count }};
+
   function addRow() {
-    const template = document.getElementById('empty-form-template');
-    const container = document.getElementById('formset-container');
-    const clone = template.content.cloneNode(true);
-    const row = clone.querySelector('.formset-row');
+    const tmpl = document.getElementById('empty-row-template');
+    const tbody = document.getElementById('formset-container');
+    const clone = tmpl.content.cloneNode(true);
+    const row = clone.querySelector('tr');
     row.innerHTML = row.innerHTML.replaceAll('__prefix__', formCount);
     row.id = 'row-' + formCount;
-    container.appendChild(row);
+    tbody.appendChild(row);
     document.getElementById('id_emissions-TOTAL_FORMS').value = ++formCount;
   }
+
   function removeRow(btn) {
-    const row = btn.closest('.formset-row');
+    const row = btn.closest('tr');
     const del = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
     if (del) { del.checked = true; row.style.display = 'none'; }
     else { row.remove(); document.getElementById('id_emissions-TOTAL_FORMS').value = --formCount; }

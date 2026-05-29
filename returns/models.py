@@ -1,3 +1,4 @@
+import secrets
 from django.db import models
 
 COUNTY_CHOICES = [
@@ -49,7 +50,20 @@ class OperatorReturn(models.Model):
         verbose_name='Annual Total Ticket Revenue (€)',
         help_text='Include online/pre-paid tickets, Young Adult and Student Card revenue. Exclude Free Travel Scheme, NTA Grant, contractual, and private hire revenues.'
     )
-    taxsaver = models.BooleanField(verbose_name='TaxSaver Participant?')
+    TAXSAVER_CHOICES = [
+        ('yes',   'Yes'),
+        ('no',    'No'),
+        ('other', 'Other'),
+    ]
+    taxsaver = models.CharField(
+        max_length=10, choices=TAXSAVER_CHOICES, default='no',
+        verbose_name='TaxSaver Tickets: Offered?',
+    )
+    taxsaver_other = models.TextField(
+        blank=True,
+        verbose_name='TaxSaver — other details',
+        help_text='Required when "Other" is selected above.',
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     submitted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -62,6 +76,36 @@ class OperatorReturn(models.Model):
 
     def __str__(self):
         return f'{self.operator_name} — {self.data_year} ({self.status})'
+
+
+class OperatorAccess(models.Model):
+    """One record per operator. Admin creates these and emails the token manually."""
+    token = models.CharField(max_length=64, unique=True, editable=False)
+    operator_name = models.CharField(max_length=200)
+    operator_email = models.EmailField()
+    operator_return = models.OneToOneField(
+        OperatorReturn, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='access',
+    )
+    is_active = models.BooleanField(default=True, help_text='Uncheck to revoke access.')
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_accessed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Operator Access'
+        verbose_name_plural = 'Operator Accesses'
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = secrets.token_urlsafe(32)
+        super().save(*args, **kwargs)
+
+    def regenerate_token(self):
+        self.token = secrets.token_urlsafe(32)
+        self.save(update_fields=['token'])
+
+    def __str__(self):
+        return f'{self.operator_name} <{self.operator_email}>'
 
 
 class LicenceReturn(models.Model):
@@ -117,6 +161,60 @@ class VehicleEmission(models.Model):
         return f'{self.vehicle_reg} ({self.res_id})'
 
 
+class SeedLicence(models.Model):
+    """NTA-provided route data seeded before operator fills in their return."""
+    operator_access = models.ForeignKey(
+        OperatorAccess, on_delete=models.CASCADE, related_name='seed_licences'
+    )
+    route_no = models.CharField(max_length=50)
+
+    class Meta:
+        unique_together = [['operator_access', 'route_no']]
+        ordering = ['route_no']
+        verbose_name = 'Seed Licence'
+
+    def __str__(self):
+        return f'{self.operator_access.operator_name} — Route {self.route_no}'
+
+
+class SeedVehicle(models.Model):
+    """NTA-provided vehicle data seeded before operator fills in their return."""
+    operator_access = models.ForeignKey(
+        OperatorAccess, on_delete=models.CASCADE, related_name='seed_vehicles'
+    )
+    res_id = models.CharField(max_length=50, blank=True)
+    vehicle_reg = models.CharField(max_length=20)
+    make = models.CharField(max_length=100, blank=True)
+    model_version = models.CharField(max_length=100, blank=True)
+    transmission = models.CharField(max_length=50, blank=True)
+    engine_type = models.CharField(max_length=50, blank=True)
+    seats_on_record = models.PositiveIntegerField(null=True, blank=True)
+
+    class Meta:
+        unique_together = [['operator_access', 'vehicle_reg']]
+        ordering = ['res_id', 'vehicle_reg']
+        verbose_name = 'Seed Vehicle'
+
+    def __str__(self):
+        return f'{self.operator_access.operator_name} — {self.vehicle_reg}'
+
+
+class VehicleRouteUsage(models.Model):
+    vehicle = models.ForeignKey(
+        VehicleEmission, on_delete=models.CASCADE, related_name='route_usages'
+    )
+    route_no = models.CharField(max_length=50)
+    usage_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        unique_together = [['vehicle', 'route_no']]
+        ordering = ['route_no']
+        verbose_name = 'Vehicle Route Usage'
+
+    def __str__(self):
+        return f'{self.vehicle} — {self.route_no}: {self.usage_percent}%'
+
+
 class VehicleAccessibility(models.Model):
     operator_return = models.ForeignKey(
         OperatorReturn, on_delete=models.CASCADE, related_name='accessibility'
@@ -143,3 +241,30 @@ class VehicleAccessibility(models.Model):
 
     def __str__(self):
         return f'{self.vehicle_reg} — accessibility'
+
+
+class Declaration(models.Model):
+    operator_return = models.OneToOneField(
+        OperatorReturn, on_delete=models.CASCADE, related_name='declaration'
+    )
+    signed_by = models.CharField(
+        max_length=200, blank=True,
+        verbose_name='Signed',
+        help_text='Leave blank if completing digitally.',
+    )
+    printed_name = models.CharField(
+        max_length=200, blank=True,
+        verbose_name='Print name in block capitals',
+        help_text='Leave blank if completing digitally.',
+    )
+    declaration_date = models.DateField(verbose_name='Date')
+    position_in_company = models.CharField(
+        max_length=200,
+        verbose_name='Position in Company (block capitals)',
+    )
+
+    class Meta:
+        verbose_name = 'Declaration'
+
+    def __str__(self):
+        return f'Declaration — {self.operator_return}'

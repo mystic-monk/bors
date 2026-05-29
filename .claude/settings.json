@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv\\\\Scripts\\\\pip install *)",
+      "Bash(python -m pip show django)",
+      "Bash(pip show *)",
+      "Bash(.venv/Scripts/python.exe manage.py check)"
+    ]
+  }
+}

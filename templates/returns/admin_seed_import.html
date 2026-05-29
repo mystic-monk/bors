@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}BORS — Seed Data Import{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h4 mb-1" style="color:var(--nta-navy); font-weight:700;">
+      <i class="bi bi-cloud-upload me-2"></i>Seed Data Import
+    </h1>
+    <p class="text-muted mb-0" style="font-size:0.85rem;">
+      Upload an Excel file to pre-populate routes and vehicles for operators.
+      Fields are editable by operators after they log in.
+    </p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'download_seed_template' %}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Template
+    </a>
+    <a href="{% url 'admin_tokens' %}" class="btn btn-sm btn-nta-secondary">
+      <i class="bi bi-arrow-left me-1"></i> Back to Tokens
+    </a>
+  </div>
+</div>
+
+{# ── Import result ── #}
+{% if result %}
+<div class="alert alert-light border mb-4" style="font-size:0.88rem;">
+  <div class="fw-semibold mb-2"><i class="bi bi-check2-circle text-success me-1"></i> Import complete</div>
+  <ul class="mb-0">
+    <li>Operators: <strong>{{ result.operators_added }}</strong> created
+      {% if result.operators_skipped %}, {{ result.operators_skipped }} already existed / skipped{% endif %}
+    </li>
+    <li>Licences: <strong>{{ result.licences_added }}</strong> new routes added
+      {% if result.licences_skipped %}, {{ result.licences_skipped }} already existed / skipped{% endif %}
+    </li>
+    <li>Vehicles: <strong>{{ result.vehicles_added }}</strong> added,
+      <strong>{{ result.vehicles_updated }}</strong> updated
+      {% if result.vehicles_skipped %}, {{ result.vehicles_skipped }} skipped{% endif %}
+    </li>
+    {% if result.errors %}
+    <li class="text-danger mt-1">
+      Unmatched operators:
+      <ul class="mb-0">{% for e in result.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </li>
+    {% endif %}
+  </ul>
+</div>
+{% endif %}
+
+{# ── Upload form ── #}
+<div class="card mb-4">
+  <div class="card-header">
+    <h5><i class="bi bi-file-earmark-excel me-2"></i>Upload Seed Excel</h5>
+    <div class="sub">
+      File can include an <strong>Operators</strong> sheet (creates accounts), a <strong>Licences</strong> sheet (seeds routes), and/or a <strong>Vehicles</strong> sheet (seeds vehicle details).
+      Download the template above to get the correct column order.
+    </div>
+  </div>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data" class="row g-3 align-items-end">
+      {% csrf_token %}
+      <div class="col-md-6">
+        <label class="form-label">Excel File (.xlsx)</label>
+        <input type="file" name="seed_file" accept=".xlsx" class="form-control form-control-sm" required>
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-nta-primary w-100">
+          <i class="bi bi-upload me-1"></i> Import
+        </button>
+      </div>
+    </form>
+
+    <div class="mt-3 p-3 rounded" style="background:#f8f9fa; font-size:0.82rem; border:1px solid var(--nta-border);">
+      <strong>Operators sheet columns (in order):</strong>
+      Operator Name &bull; Email
+      <br>
+      <strong>Licences sheet columns (in order):</strong>
+      Operator Name &bull; Route No
+      <br>
+      <strong>Vehicles sheet columns (in order):</strong>
+      Operator Name &bull; RES ID &bull; Vehicle Reg No &bull; Make &bull; Model Version &bull; Transmission &bull; Engine Type &bull; Seats on Record
+      <br><br>
+      <i class="bi bi-info-circle me-1"></i>
+      <em>The <strong>Operators sheet</strong> creates operator access accounts and generates tokens automatically — no manual entry needed.
+      Operators already in the system are skipped (no duplicates created).
+      Licences and Vehicles use Operator Name to match — it must match the Operators sheet exactly.
+      Seed data is applied the first time an operator visits Step 2 or Step 3 and will not overwrite data already entered.</em>
+    </div>
+  </div>
+</div>
+
+{# ── Current seed data ── #}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5>Current Seed Data</h5>
+    <span class="badge bg-light text-dark">{{ accesses.count }} operators</span>
+  </div>
+
+  {% if accesses %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle" style="font-size:0.85rem;">
+      <thead class="table-light">
+        <tr>
+          <th style="width:22%;">Operator</th>
+          <th style="width:22%;">Email</th>
+          <th style="width:8%;">Status</th>
+          <th>Seeded Routes</th>
+          <th>Seeded Vehicles</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in accesses %}
+        <tr>
+          <td class="fw-500">{{ a.operator_name }}</td>
+          <td style="color:#555; font-size:0.82rem;">{{ a.operator_email }}</td>
+          <td>
+            {% if a.is_active %}
+              <span class="badge" style="background:#e2f4f0; color:#007A74;">Active</span>
+            {% else %}
+              <span class="badge" style="background:#f5e6e6; color:#c0392b;">Revoked</span>
+            {% endif %}
+          </td>
+          <td>
+            {% for lic in a.seed_licences.all %}
+              <span class="badge me-1" style="background:#e2f4f0; color:#007A74; font-size:0.78rem;">
+                {{ lic.route_no }}
+              </span>
+            {% empty %}
+              <span class="text-muted" style="font-size:0.8rem;">—</span>
+            {% endfor %}
+          </td>
+          <td>
+            {% for v in a.seed_vehicles.all %}
+              <span class="badge me-1" style="background:#eef2fb; color:#1B3A6B; font-size:0.78rem;"
+                    title="{{ v.make }} {{ v.model_version }}">
+                {{ v.vehicle_reg }}
+              </span>
+            {% empty %}
+              <span class="text-muted" style="font-size:0.8rem;">—</span>
+            {% endfor %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-body text-center py-4 text-muted" style="font-size:0.88rem;">
+    No operators yet. Upload a file with an Operators sheet above.
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

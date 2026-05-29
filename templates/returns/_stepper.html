@@ -1,11 +1,12 @@
 {% comment %}Include this partial in each step template.
-Requires: steps (list of tuples), current_step (int){% endcomment %}
+Requires: steps (list of tuples), current_step (int), pk{% endcomment %}
 <div class="stepper">
   {% for slug, label, num in steps %}
     {% if num > 1 %}
       <div class="step-connector {% if num <= current_step %}done{% endif %}"></div>
     {% endif %}
-    <div class="step-item {% if num == current_step %}active{% elif num < current_step %}done{% endif %}">
+    <div class="step-item {% if num == current_step %}active{% elif num < current_step %}done clickable{% endif %}">
+      {% if num < current_step and pk %}{% with url_name="step_"|add:slug %}<a href="{% url url_name pk=pk %}" class="step-link">{% endwith %}{% endif %}
       <div class="step-circle">
         {% if num < current_step %}
           <i class="bi bi-check-lg"></i>
@@ -14,6 +15,7 @@ Requires: steps (list of tuples), current_step (int){% endcomment %}
         {% endif %}
       </div>
       <span class="step-label">{{ label }}</span>
+      {% if num < current_step and pk %}</a>{% endif %}
     </div>
   {% endfor %}
 </div>

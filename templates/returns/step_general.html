@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}BORS — Step 1: General Details{% endblock %}
+{% block title %}BORS — Step 1: General Questions{% endblock %}
 
 {% block content %}
 {% include "returns/_stepper.html" %}
@@ -9,61 +9,86 @@
 
   <div class="card mb-4">
     <div class="card-header">
-      <h5><i class="bi bi-building me-2"></i>Step 1 — General Details</h5>
-      <div class="sub">Operator identification and annual revenue summary</div>
+      <h5><i class="bi bi-building me-2"></i>Step 1 — Form A: General Questions</h5>
+      <div class="sub">Operator identification and annual revenue summary for 2025</div>
     </div>
-    <div class="card-body p-4">
 
-      <div class="help-note mb-4">
-        <strong>Revenue guidance:</strong> Include online/pre-paid tickets, Young Adult and Student Card revenue for {{ form.data_year.value|default:"2024" }}, and any business park grants for running the service.
-        Do <strong>not</strong> include Free Travel Scheme payments, NTA Grant payments, contractual revenues, or private hire revenues.
+    {# ── Revenue guidance notes (matching Excel rows 2–5) ── #}
+    <div class="card-body p-0 border-bottom">
+      <div class="px-4 py-3 border-bottom" style="background:#fafcff;">
+        <p class="mb-0" style="font-size:0.87rem;">
+          <strong>Include:</strong> The revenue figure must include any online / pre-paid tickets,
+          Young Adult and Student Card revenue for 2025 and other payments such as a grant from a
+          business park for running the service.
+        </p>
       </div>
-
-      <div class="row g-3">
-        <div class="col-md-2">
-          <label class="form-label" for="{{ form.data_year.id_for_label }}">Data Year <span class="text-danger">*</span></label>
-          {{ form.data_year }}
-          {% if form.data_year.errors %}<div class="invalid-feedback d-block">{{ form.data_year.errors }}</div>{% endif %}
-        </div>
-
-        <div class="col-md-5">
-          <label class="form-label" for="{{ form.operator_name.id_for_label }}">Operator's Name <span class="text-danger">*</span></label>
-          {{ form.operator_name }}
-          {% if form.operator_name.errors %}<div class="invalid-feedback d-block">{{ form.operator_name.errors }}</div>{% endif %}
-        </div>
-
-        <div class="col-md-5">
-          <label class="form-label" for="{{ form.trading_name.id_for_label }}">Trading Name</label>
-          {{ form.trading_name }}
-          {% if form.trading_name.errors %}<div class="invalid-feedback d-block">{{ form.trading_name.errors }}</div>{% endif %}
-        </div>
-
-        <div class="col-md-4">
-          <label class="form-label" for="{{ form.county.id_for_label }}">County of Establishment <span class="text-danger">*</span></label>
-          {{ form.county }}
-          {% if form.county.errors %}<div class="invalid-feedback d-block">{{ form.county.errors }}</div>{% endif %}
-        </div>
-
-        <div class="col-md-5">
-          <label class="form-label" for="{{ form.annual_revenue.id_for_label }}">Annual Total Ticket Revenue (€) <span class="text-danger">*</span></label>
-          <div class="input-group">
-            <span class="input-group-text">€</span>
-            {{ form.annual_revenue }}
-          </div>
-          {% if form.annual_revenue.errors %}<div class="invalid-feedback d-block">{{ form.annual_revenue.errors }}</div>{% endif %}
-        </div>
-
-        <div class="col-md-3">
-          <label class="form-label d-block">TaxSaver Participant?</label>
-          <div class="form-check mt-2">
-            {{ form.taxsaver }}
-            <label class="form-check-label ms-1" for="{{ form.taxsaver.id_for_label }}">Yes, participating</label>
-          </div>
-          {% if form.taxsaver.errors %}<div class="invalid-feedback d-block">{{ form.taxsaver.errors }}</div>{% endif %}
-        </div>
+      <div class="px-4 py-3" style="background:#fafcff;">
+        <p class="mb-0" style="font-size:0.87rem;">
+          <strong>Do not include:</strong> The revenue figures must exclude Free Travel Scheme
+          payments; NTA Grant payments; contractual; or private hire revenues.
+        </p>
       </div>
-
     </div>
+
+    {# ── Column headers (matching Excel row 7) ── #}
+    <div class="table-responsive">
+      <table class="table mb-0" style="font-size:0.87rem;">
+        <thead>
+          <tr style="background:var(--nta-teal); color:#fff;">
+            <th style="width:8%; padding:0.75rem 1rem;">Data Year</th>
+            <th style="width:22%; padding:0.75rem 1rem;">Operator's Name</th>
+            <th style="width:16%; padding:0.75rem 1rem;">Trading Name <span style="font-weight:400; opacity:0.85;">(if different)</span></th>
+            <th style="width:15%; padding:0.75rem 1rem;">Operator County of Establishment</th>
+            <th style="width:24%; padding:0.75rem 1rem;">Annual Total Ticket Revenue For All Licensed Services <span style="font-weight:400; opacity:0.85;">(Please fill in € Total)</span></th>
+            <th style="width:15%; padding:0.75rem 1rem;">TaxSaver Tickets: Offered? <span style="font-weight:400; opacity:0.85;">(Please pick from drop down list)</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="vertical-align:top;">
+            <td style="padding:0.75rem 1rem; background:#daeef7;">
+              {{ form.data_year }}
+              {% if form.data_year.errors %}<div class="text-danger" style="font-size:0.78rem;">{{ form.data_year.errors.0 }}</div>{% endif %}
+            </td>
+            <td style="padding:0.75rem 1rem; background:#daeef7;">
+              {{ form.operator_name }}
+              {% if form.operator_name.errors %}<div class="text-danger" style="font-size:0.78rem;">{{ form.operator_name.errors.0 }}</div>{% endif %}
+            </td>
+            <td style="padding:0.75rem 1rem; background:#daeef7;">
+              {{ form.trading_name }}
+              {% if form.trading_name.errors %}<div class="text-danger" style="font-size:0.78rem;">{{ form.trading_name.errors.0 }}</div>{% endif %}
+            </td>
+            <td style="padding:0.75rem 1rem; background:#daeef7;">
+              {{ form.county }}
+              {% if form.county.errors %}<div class="text-danger" style="font-size:0.78rem;">{{ form.county.errors.0 }}</div>{% endif %}
+            </td>
+            <td style="padding:0.75rem 1rem; background:#daeef7;">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text">€</span>
+                {{ form.annual_revenue }}
+              </div>
+              {% if form.annual_revenue.errors %}<div class="text-danger" style="font-size:0.78rem;">{{ form.annual_revenue.errors.0 }}</div>{% endif %}
+            </td>
+            <td style="padding:0.75rem 1rem; background:#daeef7;">
+              {{ form.taxsaver }}
+              {% if form.taxsaver.errors %}<div class="text-danger" style="font-size:0.78rem;">{{ form.taxsaver.errors.0 }}</div>{% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {# ── "Other" TaxSaver detail box (matching Excel rows 9–11) ── #}
+    <div id="taxsaver-other-section"
+         style="display:none; border-top:1px solid var(--nta-border); padding:1rem 1.25rem; background:#fafcff;">
+      <p class="mb-2" style="font-size:0.85rem; color:#555;">
+        If <strong>"Other"</strong> selected for TaxSaver Tickets please provide details below:
+      </p>
+      {{ form.taxsaver_other }}
+      {% if form.taxsaver_other.errors %}
+        <div class="text-danger" style="font-size:0.78rem; margin-top:4px;">{{ form.taxsaver_other.errors.0 }}</div>
+      {% endif %}
+    </div>
+
   </div>
 
   <div class="d-flex justify-content-between">
@@ -76,4 +101,19 @@
   </div>
 
 </form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const taxsaverSel = document.getElementById('id_taxsaver');
+  const otherBox    = document.getElementById('taxsaver-other-section');
+
+  function toggleOther() {
+    otherBox.style.display = taxsaverSel.value === 'other' ? 'block' : 'none';
+  }
+
+  taxsaverSel.addEventListener('change', toggleOther);
+  toggleOther(); // run on page load in case form is re-displayed with 'other' selected
+</script>
 {% endblock %}
