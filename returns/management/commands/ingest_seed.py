@@ -4,11 +4,10 @@ Management command: python manage.py ingest_seed [--file path/to/file.xlsx]
 Reads every .xlsx in seed_data/ (or the file given with --file) and
 upserts OperatorAccess, SeedLicence, and SeedVehicle records.
 
-Excel format
-------------
-Sheet "Operators" : Operator Name | Email
-Sheet "Licences"  : Operator Name | Route No
-Sheet "Vehicles"  : Operator Name | RES ID | Vehicle Reg No | Make | Model Version | Transmission | Engine Type | Seats on Record
+Excel format — three sheets:
+  Sheet "Operators" : Operator Name | Email
+  Sheet "Licences"  : Operator Name | Route No
+  Sheet "Vehicles"  : Operator Name | RES ID | Vehicle Reg No | Make | Model Version | Transmission | Engine Type | Seats on Record
 """
 
 import os
@@ -21,7 +20,7 @@ from returns.models import OperatorAccess, SeedLicence, SeedVehicle
 
 
 class Command(BaseCommand):
-    help = 'Ingest NTA seed data (routes + vehicles) from Excel files in seed_data/'
+    help = 'Ingest seed data (operators, routes, vehicles) from Excel files in seed_data/'
 
     def add_arguments(self, parser):
         parser.add_argument('--file', dest='file', default=None,
@@ -31,8 +30,9 @@ class Command(BaseCommand):
         if options['file']:
             files = [options['file']]
         else:
-            base = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'seed_data')
-            base = os.path.abspath(base)
+            base = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'seed_data')
+            )
             files = _glob.glob(os.path.join(base, '*.xlsx'))
             if not files:
                 raise CommandError(f'No .xlsx files found in {base}')
@@ -64,6 +64,20 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING('  No "Vehicles" sheet found — skipping vehicles.'))
 
+    def _get_access(self, operator_name):
+        try:
+            return OperatorAccess.objects.get(operator_name__iexact=operator_name.strip())
+        except OperatorAccess.DoesNotExist:
+            self.stdout.write(self.style.WARNING(
+                f'    No OperatorAccess found for "{operator_name}" — row skipped.'
+            ))
+            return None
+        except OperatorAccess.MultipleObjectsReturned:
+            self.stdout.write(self.style.WARNING(
+                f'    Multiple matches for "{operator_name}" — row skipped.'
+            ))
+            return None
+
     def _ingest_operators(self, ws):
         added = skipped = 0
         for row in ws.iter_rows(min_row=2, values_only=True):
@@ -81,20 +95,6 @@ class Command(BaseCommand):
                 OperatorAccess.objects.create(operator_name=name, operator_email=email)
                 added += 1
         self.stdout.write(f'  Operators: {added} created, {skipped} already existed / skipped.')
-
-    def _get_access(self, operator_name):
-        try:
-            return OperatorAccess.objects.get(operator_name__iexact=operator_name.strip())
-        except OperatorAccess.DoesNotExist:
-            self.stdout.write(self.style.WARNING(
-                f'    No OperatorAccess found for "{operator_name}" — row skipped.'
-            ))
-            return None
-        except OperatorAccess.MultipleObjectsReturned:
-            self.stdout.write(self.style.WARNING(
-                f'    Multiple matches for "{operator_name}" — row skipped.'
-            ))
-            return None
 
     def _ingest_licences(self, ws):
         added = updated = skipped = 0
@@ -125,13 +125,13 @@ class Command(BaseCommand):
             if not row or not row[0]:
                 continue
             operator_name = str(row[0]).strip()
-            res_id       = str(row[1]).strip() if len(row) > 1 and row[1] is not None else ''
-            vehicle_reg  = str(row[2]).strip() if len(row) > 2 and row[2] is not None else ''
-            make         = str(row[3]).strip() if len(row) > 3 and row[3] is not None else ''
-            model_ver    = str(row[4]).strip() if len(row) > 4 and row[4] is not None else ''
-            transmission = str(row[5]).strip() if len(row) > 5 and row[5] is not None else ''
-            engine_type  = str(row[6]).strip() if len(row) > 6 and row[6] is not None else ''
-            seats        = row[7] if len(row) > 7 and row[7] is not None else None
+            res_id        = str(row[1]).strip() if len(row) > 1 and row[1] is not None else ''
+            vehicle_reg   = str(row[2]).strip() if len(row) > 2 and row[2] is not None else ''
+            make          = str(row[3]).strip() if len(row) > 3 and row[3] is not None else ''
+            model_ver     = str(row[4]).strip() if len(row) > 4 and row[4] is not None else ''
+            transmission  = str(row[5]).strip() if len(row) > 5 and row[5] is not None else ''
+            engine_type   = str(row[6]).strip() if len(row) > 6 and row[6] is not None else ''
+            seats         = row[7]              if len(row) > 7 and row[7] is not None else None
 
             if not vehicle_reg:
                 skipped += 1
@@ -146,14 +146,11 @@ class Command(BaseCommand):
             except (ValueError, TypeError):
                 seats_int = None
 
-            obj, created = SeedVehicle.objects.update_or_create(
+            _, created = SeedVehicle.objects.update_or_create(
                 operator_access=access, vehicle_reg=vehicle_reg,
                 defaults={
-                    'res_id': res_id,
-                    'make': make,
-                    'model_version': model_ver,
-                    'transmission': transmission,
-                    'engine_type': engine_type,
+                    'res_id': res_id, 'make': make, 'model_version': model_ver,
+                    'transmission': transmission, 'engine_type': engine_type,
                     'seats_on_record': seats_int,
                 },
             )

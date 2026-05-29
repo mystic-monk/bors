@@ -764,7 +764,7 @@ def admin_seed_import(request):
             for row in wb['Licences'].iter_rows(min_row=2, values_only=True):
                 if not row or not row[0]:
                     continue
-                op_name = str(row[0]).strip()
+                op_name  = str(row[0]).strip()
                 route_no = str(row[1]).strip() if row[1] else ''
                 if not route_no:
                     stats['licences_skipped'] += 1
@@ -789,7 +789,7 @@ def admin_seed_import(request):
                 model_ver   = str(row[4]).strip() if len(row) > 4 and row[4] is not None else ''
                 trans       = str(row[5]).strip() if len(row) > 5 and row[5] is not None else ''
                 engine      = str(row[6]).strip() if len(row) > 6 and row[6] is not None else ''
-                seats       = row[7] if len(row) > 7 and row[7] is not None else None
+                seats       = row[7]              if len(row) > 7 and row[7] is not None else None
                 if not vehicle_reg:
                     stats['vehicles_skipped'] += 1
                     continue
@@ -805,10 +805,7 @@ def admin_seed_import(request):
                                   'transmission': trans, 'engine_type': engine,
                                   'seats_on_record': seats_int},
                     )
-                    if created:
-                        stats['vehicles_added'] += 1
-                    else:
-                        stats['vehicles_updated'] += 1
+                    stats['vehicles_added' if created else 'vehicles_updated'] += 1
                 except OperatorAccess.DoesNotExist:
                     stats['errors'].append(f'Operator not found: "{op_name}"')
 
