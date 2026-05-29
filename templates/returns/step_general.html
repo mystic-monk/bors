@@ -34,7 +34,7 @@
     <div class="table-responsive">
       <table class="table mb-0" style="font-size:0.87rem;">
         <thead>
-          <tr style="background:var(--nta-teal); color:#fff;">
+          <tr style="background:var(--app-teal); color:#fff;">
             <th style="width:8%; padding:0.75rem 1rem;">Data Year</th>
             <th style="width:22%; padding:0.75rem 1rem;">Operator's Name</th>
             <th style="width:16%; padding:0.75rem 1rem;">Trading Name <span style="font-weight:400; opacity:0.85;">(if different)</span></th>
@@ -79,7 +79,7 @@
 
     {# ── "Other" TaxSaver detail box (matching Excel rows 9–11) ── #}
     <div id="taxsaver-other-section"
-         style="display:none; border-top:1px solid var(--nta-border); padding:1rem 1.25rem; background:#fafcff;">
+         style="display:none; border-top:1px solid var(--app-border); padding:1rem 1.25rem; background:#fafcff;">
       <p class="mb-2" style="font-size:0.85rem; color:#555;">
         If <strong>"Other"</strong> selected for TaxSaver Tickets please provide details below:
       </p>
@@ -92,10 +92,10 @@
   </div>
 
   <div class="d-flex justify-content-between">
-    <a href="{% url 'index' %}" class="btn btn-nta-secondary">
+    <a href="{% url 'index' %}" class="btn btn-app-secondary">
       <i class="bi bi-arrow-left me-1"></i> Back to dashboard
     </a>
-    <button type="submit" class="btn btn-nta-primary">
+    <button type="submit" class="btn btn-app-primary">
       Continue to Licences <i class="bi bi-arrow-right ms-1"></i>
     </button>
   </div>

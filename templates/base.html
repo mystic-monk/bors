@@ -8,32 +8,32 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <style>
     :root {
-      --nta-navy: #1B3A6B;
-      --nta-teal: #007A74;
-      --nta-light: #F4F6FA;
-      --nta-border: #D0D7E3;
+      --app-navy: #1B3A6B;
+      --app-teal: #007A74;
+      --app-light: #F4F6FA;
+      --app-border: #D0D7E3;
     }
 
     body {
-      background: var(--nta-light);
+      background: var(--app-light);
       font-family: 'Segoe UI', system-ui, sans-serif;
       color: #1a1a2e;
     }
 
-    .nta-header {
-      background: var(--nta-navy);
+    .app-header {
+      background: var(--app-navy);
       color: #fff;
       padding: 0.75rem 0;
-      border-bottom: 4px solid var(--nta-teal);
+      border-bottom: 4px solid var(--app-teal);
     }
 
-    .nta-header .brand {
+    .app-header .brand {
       font-size: 1.1rem;
       font-weight: 600;
       letter-spacing: 0.01em;
     }
 
-    .nta-header .sub {
+    .app-header .sub {
       font-size: 0.78rem;
       opacity: 0.75;
     }
@@ -61,7 +61,7 @@
       font-size: 0.8rem;
       font-weight: 600;
       flex-shrink: 0;
-      border: 2px solid var(--nta-border);
+      border: 2px solid var(--app-border);
       background: #fff;
       color: #888;
       transition: all 0.2s;
@@ -77,49 +77,49 @@
     .step-connector {
       flex: 1;
       height: 2px;
-      background: var(--nta-border);
+      background: var(--app-border);
       margin: 0 8px;
     }
 
     .step-item.active .step-circle {
-      background: var(--nta-navy);
-      border-color: var(--nta-navy);
+      background: var(--app-navy);
+      border-color: var(--app-navy);
       color: #fff;
     }
 
     .step-item.active .step-label {
-      color: var(--nta-navy);
+      color: var(--app-navy);
       font-weight: 600;
     }
 
     .step-item.done .step-circle {
-      background: var(--nta-teal);
-      border-color: var(--nta-teal);
+      background: var(--app-teal);
+      border-color: var(--app-teal);
       color: #fff;
     }
 
     .step-item.done .step-label {
-      color: var(--nta-teal);
+      color: var(--app-teal);
     }
 
     .step-item.clickable { cursor: pointer; }
-    .step-item.clickable:hover .step-circle { background: var(--nta-navy); border-color: var(--nta-navy); }
-    .step-item.clickable:hover .step-label { color: var(--nta-navy); text-decoration: underline; }
+    .step-item.clickable:hover .step-circle { background: var(--app-navy); border-color: var(--app-navy); }
+    .step-item.clickable:hover .step-label { color: var(--app-navy); text-decoration: underline; }
     .step-link { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; }
     .step-link:hover { text-decoration: none; }
 
     .step-connector.done {
-      background: var(--nta-teal);
+      background: var(--app-teal);
     }
 
     .card {
-      border: 1px solid var(--nta-border);
+      border: 1px solid var(--app-border);
       border-radius: 10px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
 
     .card-header {
-      background: var(--nta-navy);
+      background: var(--app-navy);
       color: #fff;
       border-radius: 9px 9px 0 0 !important;
       padding: 0.9rem 1.25rem;
@@ -137,34 +137,34 @@
       margin-top: 2px;
     }
 
-    .btn-nta-primary {
-      background: var(--nta-navy);
-      border-color: var(--nta-navy);
+    .btn-app-primary {
+      background: var(--app-navy);
+      border-color: var(--app-navy);
       color: #fff;
       font-weight: 500;
     }
 
-    .btn-nta-primary:hover {
+    .btn-app-primary:hover {
       background: #142d55;
       border-color: #142d55;
       color: #fff;
     }
 
-    .btn-nta-secondary {
+    .btn-app-secondary {
       background: transparent;
-      border-color: var(--nta-navy);
-      color: var(--nta-navy);
+      border-color: var(--app-navy);
+      color: var(--app-navy);
       font-weight: 500;
     }
 
-    .btn-nta-secondary:hover {
-      background: var(--nta-navy);
+    .btn-app-secondary:hover {
+      background: var(--app-navy);
       color: #fff;
     }
 
     .formset-row {
       background: #fff;
-      border: 1px solid var(--nta-border);
+      border: 1px solid var(--app-border);
       border-radius: 8px;
       padding: 1rem 1.1rem 0.5rem;
       margin-bottom: 0.75rem;
@@ -193,15 +193,15 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--nta-teal);
-      border-bottom: 1px solid var(--nta-border);
+      color: var(--app-teal);
+      border-bottom: 1px solid var(--app-border);
       padding-bottom: 0.35rem;
       margin-bottom: 0.75rem;
     }
 
     .help-note {
       background: #EEF2FB;
-      border-left: 4px solid var(--nta-navy);
+      border-left: 4px solid var(--app-navy);
       border-radius: 4px;
       padding: 0.65rem 1rem;
       font-size: 0.82rem;
@@ -215,8 +215,8 @@
     }
 
     .add-row-btn {
-      border: 2px dashed var(--nta-teal);
-      color: var(--nta-teal);
+      border: 2px dashed var(--app-teal);
+      color: var(--app-teal);
       background: transparent;
       border-radius: 7px;
       padding: 0.5rem 1.25rem;
@@ -227,12 +227,12 @@
     }
 
     .add-row-btn:hover {
-      background: var(--nta-teal);
+      background: var(--app-teal);
       color: #fff;
     }
 
-    .badge-status-draft { background: #eaf0fb; color: var(--nta-navy); }
-    .badge-status-submitted { background: #e2f4f0; color: var(--nta-teal); }
+    .badge-status-draft { background: #eaf0fb; color: var(--app-navy); }
+    .badge-status-submitted { background: #e2f4f0; color: var(--app-teal); }
 
     footer {
       font-size: 0.78rem;
@@ -244,13 +244,13 @@
 </head>
 <body>
 
-<header class="nta-header">
+<header class="app-header">
   <div class="container">
     <div class="d-flex align-items-center justify-content-between">
       <div>
         <a href="{% url 'index' %}" style="text-decoration:none; color:inherit;">
-          <div class="brand">National Transport Authority</div>
-          <div class="sub">Bus Operator Returns System (BORS)</div>
+          <div class="brand">Bus Operator Returns System</div>
+          <div class="sub">Annual Data Collection</div>
         </a>
       </div>
       <div class="d-flex align-items-center gap-3">
@@ -291,7 +291,7 @@
 </main>
 
 <footer>
-  &copy; National Transport Authority &mdash; Internal Use Only &mdash; v{{ app_version }}
+  &copy; Bus Operator Returns System &mdash; Internal Use Only &mdash; v{{ app_version }}
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

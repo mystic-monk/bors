@@ -19,7 +19,7 @@
 
         <thead>
           {# Main header row #}
-          <tr style="background:var(--nta-teal); color:#fff; vertical-align:middle; text-align:center;">
+          <tr style="background:var(--app-teal); color:#fff; vertical-align:middle; text-align:center;">
             <th style="width:70px;">RES ID</th>
             <th style="width:90px;">Vehicle Reg No.</th>
             <th style="width:90px;">Regularly Deployed on Scheduled Services<br><small style="font-weight:400;">(Yes / No)</small></th>
@@ -117,10 +117,10 @@
   </div>
 
   <div class="d-flex justify-content-between">
-    <a href="{% url 'step_licence' pk=pk %}" class="btn btn-nta-secondary">
+    <a href="{% url 'step_licence' pk=pk %}" class="btn btn-app-secondary">
       <i class="bi bi-arrow-left me-1"></i> Back
     </a>
-    <button type="submit" class="btn btn-nta-primary">
+    <button type="submit" class="btn btn-app-primary">
       Continue to Accessibility <i class="bi bi-arrow-right ms-1"></i>
     </button>
   </div>
@@ -128,7 +128,7 @@
 </form>
 
 <style>
-  .emission-table td, .emission-table th { border-color: var(--nta-border) !important; }
+  .emission-table td, .emission-table th { border-color: var(--app-border) !important; }
   .emission-table tbody tr td { background: #daeef7; }
   .emission-table .form-control, .emission-table .form-select { font-size: 0.8rem; min-width: 70px; }
   .err { color: #c0392b; font-size: 0.72rem; margin-top: 2px; line-height: 1.2; }

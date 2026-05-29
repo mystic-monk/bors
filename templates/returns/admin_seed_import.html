@@ -5,7 +5,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
-    <h1 class="h4 mb-1" style="color:var(--nta-navy); font-weight:700;">
+    <h1 class="h4 mb-1" style="color:var(--app-navy); font-weight:700;">
       <i class="bi bi-cloud-upload me-2"></i>Seed Data Import
     </h1>
     <p class="text-muted mb-0" style="font-size:0.85rem;">
@@ -17,7 +17,7 @@
     <a href="{% url 'download_seed_template' %}" class="btn btn-sm btn-outline-secondary">
       <i class="bi bi-file-earmark-arrow-down me-1"></i> Download Template
     </a>
-    <a href="{% url 'admin_tokens' %}" class="btn btn-sm btn-nta-secondary">
+    <a href="{% url 'admin_tokens' %}" class="btn btn-sm btn-app-secondary">
       <i class="bi bi-arrow-left me-1"></i> Back to Tokens
     </a>
   </div>
@@ -65,13 +65,13 @@
         <input type="file" name="seed_file" accept=".xlsx" class="form-control form-control-sm" required>
       </div>
       <div class="col-md-3">
-        <button type="submit" class="btn btn-nta-primary w-100">
+        <button type="submit" class="btn btn-app-primary w-100">
           <i class="bi bi-upload me-1"></i> Import
         </button>
       </div>
     </form>
 
-    <div class="mt-3 p-3 rounded" style="background:#f8f9fa; font-size:0.82rem; border:1px solid var(--nta-border);">
+    <div class="mt-3 p-3 rounded" style="background:#f8f9fa; font-size:0.82rem; border:1px solid var(--app-border);">
       <strong>Operators sheet columns (in order):</strong>
       Operator Name &bull; Email
       <br>
