@@ -89,6 +89,7 @@ class OperatorAccess(models.Model):
         on_delete=models.SET_NULL, related_name='access',
     )
     is_active = models.BooleanField(default=True, help_text='Uncheck to revoke access.')
+    is_test = models.BooleanField(default=False, help_text='Mark as a test account — submissions can be wiped independently of real data.')
     created_at = models.DateTimeField(auto_now_add=True)
     last_accessed_at = models.DateTimeField(null=True, blank=True)
 

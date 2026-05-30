@@ -31,13 +31,13 @@ class OperatorReturnAdmin(admin.ModelAdmin):
 class OperatorAccessAdmin(admin.ModelAdmin):
     list_display = [
         'operator_name', 'operator_email',
-        'token_box', 'is_active',
+        'token_box', 'is_active', 'is_test',
         'return_status', 'created_at', 'last_accessed_at',
     ]
-    list_filter = ['is_active']
+    list_filter = ['is_active', 'is_test']
     search_fields = ['operator_name', 'operator_email']
     readonly_fields = ['token', 'token_box', 'created_at', 'last_accessed_at']
-    fields = ['operator_name', 'operator_email', 'is_active', 'token', 'token_box', 'operator_return', 'created_at', 'last_accessed_at']
+    fields = ['operator_name', 'operator_email', 'is_active', 'is_test', 'token', 'token_box', 'operator_return', 'created_at', 'last_accessed_at']
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

@@ -112,6 +112,18 @@ def toggle_access(request, pk):
 
 
 @staff_member_required(login_url='/admin/login/')
+def toggle_test(request, pk):
+    if request.method != 'POST':
+        return redirect('admin_tokens')
+    access = get_object_or_404(OperatorAccess, pk=pk)
+    access.is_test = not access.is_test
+    access.save(update_fields=['is_test'])
+    state = 'marked as TEST' if access.is_test else 'marked as REAL'
+    messages.success(request, f'{access.operator_name} {state}.')
+    return redirect('admin_tokens')
+
+
+@staff_member_required(login_url='/admin/login/')
 def regenerate_token(request, pk):
     if request.session.get('operator_access_id') or request.method != 'POST':
         return redirect('index')

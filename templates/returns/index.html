@@ -103,7 +103,14 @@
 {# ── Page heading ── #}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
-    <h1 class="h4 mb-1" style="color: var(--app-navy); font-weight: 700;">My Return — 2025</h1>
+    <h1 class="h4 mb-1" style="color: var(--app-navy); font-weight: 700;">
+      My Return — 2025
+      {% if access.is_test %}
+      <span class="badge ms-2" style="background:#fff3cd;color:#856404;border:1px solid #ffc107;font-size:0.65rem;vertical-align:middle;letter-spacing:0.05em;">
+        <i class="bi bi-flask me-1"></i>TEST ACCOUNT
+      </span>
+      {% endif %}
+    </h1>
     <p class="text-muted mb-0" style="font-size:0.85rem;">{{ access.operator_name }}</p>
   </div>
 </div>

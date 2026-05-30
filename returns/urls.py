@@ -7,6 +7,7 @@ urlpatterns = [
     path('access/logout/', views.access_logout, name='access_logout'),
     path('tokens/', views.admin_tokens, name='admin_tokens'),
     path('tokens/<int:pk>/toggle/', views.toggle_access, name='toggle_access'),
+    path('tokens/<int:pk>/toggle-test/', views.toggle_test, name='toggle_test'),
     path('tokens/<int:pk>/regenerate/', views.regenerate_token, name='regenerate_token'),
     path('tokens/regenerate-all/', views.regenerate_all_tokens, name='regenerate_all_tokens'),
     path('return/new/', views.step_general, name='step_general_new'),

@@ -89,7 +89,14 @@
       <tbody>
         {% for a in accesses %}
         <tr class="{% if not a.is_active %}table-secondary{% endif %}">
-          <td><div class="fw-500">{{ a.operator_name }}</div></td>
+          <td>
+            <div class="fw-500">{{ a.operator_name }}</div>
+            {% if a.is_test %}
+              <span class="badge mt-1" style="background:#fff3cd;color:#856404;border:1px solid #ffc107;font-size:0.72rem;letter-spacing:0.04em;">
+                <i class="bi bi-flask me-1"></i>TEST
+              </span>
+            {% endif %}
+          </td>
           <td style="color:#555; font-size:0.82rem;">{{ a.operator_email }}</td>
           <td>
             <div class="d-flex align-items-center gap-2">
@@ -150,6 +157,16 @@
                 <button type="submit" class="btn-icon text-warning" title="Generate a new token for this operator"
                   onclick="return confirm('Regenerate token for {{ a.operator_name }}? Their old token will stop working immediately.')">
                   <i class="bi bi-arrow-repeat"></i>
+                </button>
+              </form>
+
+              {# Test / Real toggle #}
+              <form method="post" action="{% url 'toggle_test' pk=a.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit"
+                  class="btn-icon {% if a.is_test %}text-test-on{% else %}text-test-off{% endif %}"
+                  title="{% if a.is_test %}Unmark as test account{% else %}Mark as test account{% endif %}">
+                  <i class="bi bi-flask"></i>
                 </button>
               </form>
 
@@ -236,6 +253,10 @@
   .btn-icon.text-danger:hover  { background: #fff5f5; }
   .btn-icon.text-success { color: #1a7a4a !important; border-color: #b2dfc7; }
   .btn-icon.text-success:hover { background: #f0fff6; }
+  .btn-icon.text-test-on  { color: #856404 !important; border-color: #ffc107; background: #fff9e6; }
+  .btn-icon.text-test-on:hover  { background: #fff3cd; }
+  .btn-icon.text-test-off { color: #aaa !important; border-color: #ddd; }
+  .btn-icon.text-test-off:hover { background: #f9f9f9; }
 </style>
 
 <script>

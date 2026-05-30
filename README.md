@@ -10,10 +10,12 @@ Internal NTA web application for collecting annual returns from licensed bus ope
 2. [First-time setup](#first-time-setup)
 3. [Annual collection process](#annual-collection-process)
 4. [Seeding operator data](#seeding-operator-data)
-5. [Downloading submissions](#downloading-submissions)
-6. [Admin reference](#admin-reference)
-7. [Running locally](#running-locally)
-8. [Deployment (Render)](#deployment-render)
+5. [Locking a collection year](#locking-a-collection-year)
+6. [Test mode](#test-mode)
+7. [Downloading submissions](#downloading-submissions)
+8. [Admin reference](#admin-reference)
+9. [Running locally](#running-locally)
+10. [Deployment (Render)](#deployment-render)
 
 ---
 
@@ -94,6 +96,7 @@ python manage.py runserver
 | `http://127.0.0.1:8000/admin/` | Django admin |
 | `http://127.0.0.1:8000/tokens/` | NTA staff: token manager |
 | `http://127.0.0.1:8000/staff/seed-import/` | NTA staff: seed data upload |
+| `http://127.0.0.1:8000/staff/locks/` | NTA staff: year lock manager |
 
 ---
 
@@ -103,20 +106,69 @@ Follow these steps at the start of each new data collection year (e.g. collectin
 
 ### Step 1 — Add / update operators
 
-Go to `/staff/seed-import/` → **Download Template**. Fill in the **Operators sheet** (Operator Name, Email) with every operator for this year's collection, then upload the file.
+Go to `/tokens/` and use the **Add New Operator** form (Operator Name + Email) to create accounts one at a time. A token is generated automatically.
 
-- New operators are created automatically with a token generated.
-- Operators already in the system are skipped — no duplicates.
-- You can also add individual operators manually at `/tokens/` if needed.
+Alternatively, add operators in bulk via the **Operators sheet** in a seed import file at `/staff/seed-import/` (see [Seeding operator data](#seeding-operator-data)).
 
-Then go to `/tokens/` and click **Regenerate All Tokens** to invalidate any previous tokens and issue fresh ones for every operator. Do this _before_ sending any emails.
+Then click **Regenerate All Tokens** at `/tokens/` to invalidate any tokens from the previous year and issue fresh ones. Do this _before_ sending any emails.
 
 ### Step 2 — Prepare seed data (optional but recommended)
 
-NTA has existing records for routes and vehicles. Pre-seeding this data saves operators time and reduces errors.
+Pre-seeding routes and vehicles saves operators time and reduces errors. See [Seeding operator data](#seeding-operator-data) for full details.
+
+### Step 3 — Send access codes to operators
+
+Go to `/tokens/` and click the **envelope icon** next to each operator. This copies a ready-made email to your clipboard — paste it into Outlook (or your email client) and send.
+
+The email contains:
+- The operator's unique access code
+- A link to the BORS login page (`/access/`)
+
+### Step 4 — Monitor submissions
+
+The Token Manager shows each operator's return status: **Draft** (started, not submitted) or **Submitted**.
+
+Check back periodically and chase operators who have not submitted by the deadline.
+
+### Step 5 — Lock the year and download submissions
+
+Once the collection period closes:
+
+1. Go to `/staff/locks/` and lock the collection year. This immediately prevents all operators from editing or submitting returns for that year. They can still view and download their submitted return.
+2. Go to `/tokens/` and use the download buttons in the top-right corner:
+
+| Button | File | Contents |
+|--------|------|----------|
+| Download All (Excel) | `BORS_All_Operators.xlsx` | 6 sheets: General, Licences, Emissions, Vehicle Route Usage, Accessibility, Declarations |
+| Download All (JSON) | `BORS_All_Operators.json` | Full nested data for all operators |
+
+Both files include all operators regardless of submission status (draft returns are included).
+
+---
+
+## Seeding operator data
+
+Seed data pre-populates routes and vehicles for operators before they start their return. It is tied to a specific **data year** so each year's seed data is kept separate.
+
+### What gets pre-filled
+
+| Panel | Pre-filled from seed | Operator fills in |
+|-------|---------------------|-------------------|
+| Step 2 Licences | Route No | All Y/N columns, passenger numbers, km, PVR |
+| Step 3 Emissions | RES ID, Reg No, Make, Model, Transmission, Engine Type, Seats on Record | Y/N fields, fuel type, Euro standard, route usage % |
+
+Seed data is applied the **first time** an operator visits Step 2 or Step 3. It will never overwrite data an operator has already entered.
+
+### Uploading via the web UI
 
 1. Go to `/staff/seed-import/` → **Download Template**
-2. Fill in the two sheets:
+2. Fill in the sheets:
+
+   **Operators sheet** — creates operator accounts (skips existing)
+
+   | Operator Name | Email |
+   |---|---|
+   | Callinan Coaches Ltd | info@callinan.ie |
 
    **Licences sheet**
 
@@ -135,59 +187,80 @@ NTA has existing records for routes and vehicles. Pre-seeding this data saves op
    - **RES ID** is the sequential row number (1, 2, 3 …).
    - Leave any unknown fields blank — operators can fill them in.
 
-3. Upload the completed file at `/staff/seed-import/`.
+3. Set the **Data Year** field on the upload form to the collection year.
+4. Upload the completed file.
 
-   Alternatively, place the file in the `seed_data/` folder and run:
+The current seed data table below the form can be filtered by year to review what has been loaded.
 
-   ```bash
-   python manage.py ingest_seed
-   # or for a specific file:
-   python manage.py ingest_seed --file path/to/file.xlsx
-   ```
+### Uploading via command line
 
-Seed data is applied the **first time** an operator visits Step 2 or Step 3. It will never overwrite data an operator has already entered.
+```bash
+# Import all .xlsx files from the seed_data/ folder for a given year
+python manage.py ingest_seed --year 2025
 
-### Step 3 — Send access codes to operators
-
-Go to `/tokens/` and click the **envelope icon** next to each operator. This copies a ready-made email to your clipboard — paste it into Outlook (or your email client) and send.
-
-The email contains:
-- The operator's unique access code
-- A link to the BORS login page (`/access/`)
-
-### Step 4 — Monitor submissions
-
-The Token Manager shows each operator's return status: **Draft** (started, not submitted) or **Submitted**.
-
-Check back periodically and chase operators who have not submitted by the deadline.
-
-### Step 5 — Download all submissions
-
-Once the collection period closes, go to `/tokens/` and use the download buttons in the top-right corner:
-
-| Button | File | Contents |
-|--------|------|----------|
-| Download All (Excel) | `BORS_All_Operators.xlsx` | 6 sheets: General, Licences, Emissions, Vehicle Route Usage, Accessibility, Declarations |
-| Download All (JSON) | `BORS_All_Operators.json` | Full nested data for all operators |
-
-Both files include all operators regardless of submission status (draft returns are included).
-
----
-
-## Seeding operator data
-
-### What gets pre-filled
-
-| Panel | Pre-filled from seed | Operator fills in |
-|-------|---------------------|-------------------|
-| Step 2 Licences | Route No | All Y/N columns, passenger numbers, km, PVR |
-| Step 3 Emissions | RES ID, Reg No, Make, Model, Transmission, Engine Type, Seats on Record | Y/N fields, fuel type, Euro standard, route usage % |
+# Import a specific file
+python manage.py ingest_seed --year 2025 --file path/to/file.xlsx
+```
 
 ### Clearing seed data
 
-Seed data is stored in the database. To remove it, use the Django admin at `/admin/` → **Seed Licences** or **Seed Vehicles**.
+Seed data is stored in the database. To remove it, use the Django admin at `/admin/` → **Seed Licences** or **Seed Vehicles** and filter by year.
 
 Removing seed data does not affect returns that have already been started — operator-entered data is separate.
+
+---
+
+## Locking a collection year
+
+Once the collection period for a year is closed, lock that year to prevent operators from making any further changes.
+
+### Lock a year
+
+Go to `/staff/locks/`, enter the year, and click **Lock Year**.
+
+- Operators immediately lose the ability to save or submit returns for that year.
+- They can still view their submitted return and download their Excel export.
+- All form fields are shown as read-only in their browser.
+
+### Unlock a year
+
+On the same page, click **Unlock** next to the locked year. Operators can edit and submit again immediately.
+
+The lock manager is also accessible from the **Year Locks** button on the Token Manager page.
+
+---
+
+## Test mode
+
+Use test mode to run through the full operator workflow without creating real submission data.
+
+### Mark an operator as a test account
+
+Go to `/tokens/` and click the **flask icon** in the operator's row. The icon turns amber and a **TEST** badge appears on the operator's row and on their return page.
+
+### Clear test submissions
+
+```bash
+# Dry-run — shows how many records would be deleted
+python manage.py clear_submissions --test-only
+
+# Actually delete
+python manage.py clear_submissions --test-only --confirm
+```
+
+This deletes all returns (and their licences, emissions, accessibility records, and declarations) belonging to test operators only. Real operator data is untouched.
+
+### Clear all submissions
+
+```bash
+# Dry-run
+python manage.py clear_submissions --all
+
+# Actually delete
+python manage.py clear_submissions --all --confirm
+```
+
+Operator access tokens and seed data are never deleted by either command.
 
 ---
 
@@ -230,6 +303,7 @@ Available from the operator's own success page after they submit. Operators can 
 | `/tokens/` | NTA staff | Create operators, manage tokens, download data |
 | `/staff/seed-import/` | NTA staff | Upload pre-populated routes and vehicles |
 | `/staff/seed-template/` | NTA staff | Download blank seed Excel template |
+| `/staff/locks/` | NTA staff | Lock / unlock a collection year |
 | `/staff/export/excel/` | NTA staff | Bulk Excel download |
 | `/staff/export/json/` | NTA staff | Bulk JSON download |
 | `/access/` | Operators | Token login page |
@@ -237,11 +311,20 @@ Available from the operator's own success page after they submit. Operators can 
 ### Management commands
 
 ```bash
-# Import seed data from the seed_data/ folder
-python manage.py ingest_seed
+# Import seed data for a specific year from the seed_data/ folder
+python manage.py ingest_seed --year 2025
 
 # Import from a specific file
-python manage.py ingest_seed --file seed_data/2026_seed.xlsx
+python manage.py ingest_seed --year 2025 --file seed_data/2025_seed.xlsx
+
+# Clear test submissions (dry-run — no changes made)
+python manage.py clear_submissions --test-only
+
+# Clear test submissions (destructive)
+python manage.py clear_submissions --test-only --confirm
+
+# Clear ALL submissions (destructive)
+python manage.py clear_submissions --all --confirm
 
 # Apply all database migrations (run after code updates)
 python manage.py migrate
@@ -252,7 +335,7 @@ python manage.py createsuperuser
 
 ### Data year
 
-The data year is set by the operator in Step 1 (General). There is no system-wide year setting — each return carries its own year. This means the same operator can have multiple returns for different years in the database simultaneously.
+The data year is set by the operator in Step 1 (General) and by staff when uploading seed data. Each return carries its own year, so the same operator can have returns for different years in the database simultaneously. Year locks are applied per year and affect all operators.
 
 ---
 
