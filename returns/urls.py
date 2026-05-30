@@ -21,4 +21,6 @@ urlpatterns = [
     path('staff/export/json/', views.export_all_json, name='export_all_json'),
     path('staff/seed-import/', views.admin_seed_import, name='admin_seed_import'),
     path('staff/seed-template/', views.download_seed_template, name='download_seed_template'),
+    path('staff/locks/', views.admin_locks, name='admin_locks'),
+    path('staff/locks/<int:year>/unlock/', views.unlock_year, name='unlock_year'),
 ]

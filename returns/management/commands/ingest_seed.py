@@ -23,6 +23,8 @@ class Command(BaseCommand):
     help = 'Ingest seed data (operators, routes, vehicles) from Excel files in seed_data/'
 
     def add_arguments(self, parser):
+        parser.add_argument('--year', dest='year', type=int, required=True,
+                            help='Data year for this seed import (e.g. 2025).')
         parser.add_argument('--file', dest='file', default=None,
                             help='Path to a specific Excel file to ingest.')
 
@@ -37,13 +39,14 @@ class Command(BaseCommand):
             if not files:
                 raise CommandError(f'No .xlsx files found in {base}')
 
+        year = options['year']
         for path in files:
-            self.stdout.write(f'Processing {path}...')
-            self._process(path)
+            self.stdout.write(f'Processing {path} for year {year}...')
+            self._process(path, year)
 
         self.stdout.write(self.style.SUCCESS('Done.'))
 
-    def _process(self, path):
+    def _process(self, path, year):
         try:
             wb = openpyxl.load_workbook(path, data_only=True)
         except Exception as e:
@@ -55,12 +58,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING('  No "Operators" sheet found — skipping operators.'))
 
         if 'Licences' in wb.sheetnames:
-            self._ingest_licences(wb['Licences'])
+            self._ingest_licences(wb['Licences'], year)
         else:
             self.stdout.write(self.style.WARNING('  No "Licences" sheet found — skipping licences.'))
 
         if 'Vehicles' in wb.sheetnames:
-            self._ingest_vehicles(wb['Vehicles'])
+            self._ingest_vehicles(wb['Vehicles'], year)
         else:
             self.stdout.write(self.style.WARNING('  No "Vehicles" sheet found — skipping vehicles.'))
 
@@ -96,7 +99,7 @@ class Command(BaseCommand):
                 added += 1
         self.stdout.write(f'  Operators: {added} created, {skipped} already existed / skipped.')
 
-    def _ingest_licences(self, ws):
+    def _ingest_licences(self, ws, year):
         added = updated = skipped = 0
         for row in ws.iter_rows(min_row=2, values_only=True):
             if not row or not row[0]:
@@ -111,7 +114,7 @@ class Command(BaseCommand):
                 skipped += 1
                 continue
             _, created = SeedLicence.objects.get_or_create(
-                operator_access=access, route_no=route_no
+                operator_access=access, year=year, route_no=route_no
             )
             if created:
                 added += 1
@@ -119,7 +122,7 @@ class Command(BaseCommand):
                 updated += 1
         self.stdout.write(f'  Licences: {added} added, {updated} already existed, {skipped} skipped.')
 
-    def _ingest_vehicles(self, ws):
+    def _ingest_vehicles(self, ws, year):
         added = updated = skipped = 0
         for row in ws.iter_rows(min_row=2, values_only=True):
             if not row or not row[0]:
@@ -147,7 +150,7 @@ class Command(BaseCommand):
                 seats_int = None
 
             _, created = SeedVehicle.objects.update_or_create(
-                operator_access=access, vehicle_reg=vehicle_reg,
+                operator_access=access, year=year, vehicle_reg=vehicle_reg,
                 defaults={
                     'res_id': res_id, 'make': make, 'model_version': model_ver,
                     'transmission': transmission, 'engine_type': engine_type,

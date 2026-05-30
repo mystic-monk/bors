@@ -10,7 +10,8 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from django.contrib.admin.views.decorators import staff_member_required
 
 from decimal import Decimal, InvalidOperation
-from .models import OperatorReturn, OperatorAccess, Declaration, VehicleRouteUsage, VehicleEmission, SeedLicence, SeedVehicle
+import datetime
+from .models import OperatorReturn, OperatorAccess, Declaration, VehicleRouteUsage, VehicleEmission, SeedLicence, SeedVehicle, YearLock
 from .forms import GeneralForm, LicenceFormSet, EmissionFormSet, AccessibilityFormSet, OperatorAccessForm, DeclarationForm
 
 STEPS = [
@@ -45,6 +46,10 @@ def _owns_return(access, pk):
     if access.operator_return_id == pk:
         return access.operator_return
     return None
+
+
+def _is_year_locked(year):
+    return YearLock.objects.filter(year=year).exists()
 
 
 # ── Auth views ────────────────────────────────────────────────────────────────
@@ -128,14 +133,53 @@ def regenerate_all_tokens(request):
     return redirect('admin_tokens')
 
 
+@staff_member_required(login_url='/admin/login/')
+def admin_locks(request):
+    if request.method == 'POST':
+        try:
+            year = int(request.POST.get('year', 0))
+            if year < 2000 or year > 2100:
+                raise ValueError
+        except (ValueError, TypeError):
+            messages.error(request, 'Please enter a valid year.')
+            return redirect('admin_locks')
+        locked_by = request.user.get_full_name() or request.user.username
+        _, created = YearLock.objects.get_or_create(year=year, defaults={'locked_by': locked_by})
+        if created:
+            messages.success(request, f'{year} submissions locked. Operators can no longer edit or submit returns for that year.')
+        else:
+            messages.info(request, f'{year} is already locked.')
+        return redirect('admin_locks')
+
+    locks = YearLock.objects.order_by('-year')
+    current_year = datetime.date.today().year
+    return render(request, 'returns/admin_locks.html', {
+        'locks': locks,
+        'current_year': current_year,
+    })
+
+
+@staff_member_required(login_url='/admin/login/')
+def unlock_year(request, year):
+    if request.method != 'POST':
+        return redirect('admin_locks')
+    deleted, _ = YearLock.objects.filter(year=year).delete()
+    if deleted:
+        messages.success(request, f'{year} submissions unlocked. Operators can edit and submit returns for that year again.')
+    return redirect('admin_locks')
+
+
 # ── Operator views ─────────────────────────────────────────────────────────────
 
 @require_operator_access
 def index(request):
     access = request.operator_access
+    op_return = access.operator_return
+    is_locked = _is_year_locked(op_return.data_year) if op_return else False
     return render(request, 'returns/index.html', {
-        'operator_return': access.operator_return,
+        'operator_return': op_return,
         'access': access,
+        'is_locked': is_locked,
     })
 
 
@@ -156,6 +200,10 @@ def step_general(request, pk=None):
     if request.method == 'POST':
         form = GeneralForm(request.POST, instance=instance)
         if form.is_valid():
+            year = form.cleaned_data.get('data_year')
+            if _is_year_locked(year):
+                messages.error(request, f'Submissions for {year} are locked by NTA staff and cannot be modified.')
+                return redirect('index')
             obj = form.save()
             if not access.operator_return:
                 access.operator_return = obj
@@ -169,11 +217,13 @@ def step_general(request, pk=None):
             initial['data_year'] = 2025
         form = GeneralForm(instance=instance, initial=initial)
 
+    is_locked = _is_year_locked(instance.data_year) if instance else False
     return render(request, 'returns/step_general.html', {
         'form': form,
         'steps': STEPS,
         'current_step': 1,
         'pk': instance.pk if instance else None,
+        'is_locked': is_locked,
     })
 
 
@@ -203,6 +253,9 @@ def step_licence(request, pk):
                 )
 
     if request.method == 'POST':
+        if _is_year_locked(obj.data_year):
+            messages.error(request, f'Submissions for {obj.data_year} are locked by NTA staff and cannot be modified.')
+            return redirect('index')
         formset = LicenceFormSet(request.POST, instance=obj)
         if formset.is_valid():
             formset.save()
@@ -217,6 +270,7 @@ def step_licence(request, pk):
         'steps': STEPS,
         'current_step': 2,
         'pk': pk,
+        'is_locked': _is_year_locked(obj.data_year),
     })
 
 
@@ -250,6 +304,9 @@ def step_emissions(request, pk):
                 )
 
     if request.method == 'POST':
+        if _is_year_locked(obj.data_year):
+            messages.error(request, f'Submissions for {obj.data_year} are locked by NTA staff and cannot be modified.')
+            return redirect('index')
         formset = EmissionFormSet(request.POST, instance=obj)
         if formset.is_valid():
             formset.save()
@@ -290,6 +347,7 @@ def step_emissions(request, pk):
         'steps': STEPS,
         'current_step': 3,
         'pk': pk,
+        'is_locked': _is_year_locked(obj.data_year),
     })
 
 
@@ -308,6 +366,9 @@ def step_accessibility(request, pk):
             obj.accessibility.create(res_id=em.res_id, vehicle_reg=em.vehicle_reg)
 
     if request.method == 'POST':
+        if _is_year_locked(obj.data_year):
+            messages.error(request, f'Submissions for {obj.data_year} are locked by NTA staff and cannot be modified.')
+            return redirect('index')
         formset = AccessibilityFormSet(request.POST, instance=obj)
         if formset.is_valid():
             formset.save()
@@ -330,6 +391,7 @@ def step_accessibility(request, pk):
         'steps': STEPS,
         'current_step': 4,
         'pk': pk,
+        'is_locked': _is_year_locked(obj.data_year),
     })
 
 
@@ -343,6 +405,9 @@ def step_declaration(request, pk):
     instance = getattr(obj, 'declaration', None)
 
     if request.method == 'POST':
+        if _is_year_locked(obj.data_year):
+            messages.error(request, f'Submissions for {obj.data_year} are locked by NTA staff and cannot be modified.')
+            return redirect('index')
         form = DeclarationForm(request.POST, instance=instance)
         if form.is_valid():
             decl = form.save(commit=False)
@@ -365,6 +430,7 @@ def step_declaration(request, pk):
         'steps': STEPS,
         'current_step': 5,
         'pk': pk,
+        'is_locked': _is_year_locked(obj.data_year),
     })
 
 
@@ -732,6 +798,14 @@ def export_all_json(request):
 def admin_seed_import(request):
     result = None
     if request.method == 'POST' and request.FILES.get('seed_file'):
+        try:
+            data_year = int(request.POST.get('data_year', 0))
+            if data_year < 2000 or data_year > 2100:
+                raise ValueError
+        except (ValueError, TypeError):
+            messages.error(request, 'Please enter a valid year (e.g. 2025).')
+            return redirect('admin_seed_import')
+
         f = request.FILES['seed_file']
         try:
             wb = openpyxl.load_workbook(f, data_only=True)
@@ -772,7 +846,7 @@ def admin_seed_import(request):
                 try:
                     access = OperatorAccess.objects.get(operator_name__iexact=op_name)
                     _, created = SeedLicence.objects.get_or_create(
-                        operator_access=access, route_no=route_no
+                        operator_access=access, year=data_year, route_no=route_no
                     )
                     stats['licences_added' if created else 'licences_skipped'] += 1
                 except OperatorAccess.DoesNotExist:
@@ -800,7 +874,7 @@ def admin_seed_import(request):
                     except (ValueError, TypeError):
                         seats_int = None
                     _, created = SeedVehicle.objects.update_or_create(
-                        operator_access=access, vehicle_reg=vehicle_reg,
+                        operator_access=access, year=data_year, vehicle_reg=vehicle_reg,
                         defaults={'res_id': res_id, 'make': make, 'model_version': model_ver,
                                   'transmission': trans, 'engine_type': engine,
                                   'seats_on_record': seats_int},
@@ -815,13 +889,23 @@ def admin_seed_import(request):
         else:
             messages.warning(request, f'{len(stats["errors"])} operator(s) not matched — see details below.')
 
+    from django.db.models import Prefetch
+    current_year = datetime.date.today().year
+    try:
+        view_year = int(request.GET.get('view_year', current_year))
+    except (ValueError, TypeError):
+        view_year = current_year
+
     accesses = OperatorAccess.objects.prefetch_related(
-        'seed_licences', 'seed_vehicles'
+        Prefetch('seed_licences', queryset=SeedLicence.objects.filter(year=view_year)),
+        Prefetch('seed_vehicles', queryset=SeedVehicle.objects.filter(year=view_year)),
     ).order_by('operator_name')
 
     return render(request, 'returns/admin_seed_import.html', {
         'accesses': accesses,
         'result': result,
+        'current_year': current_year,
+        'view_year': view_year,
     })
 
 

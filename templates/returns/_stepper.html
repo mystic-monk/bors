@@ -1,5 +1,15 @@
 {% comment %}Include this partial in each step template.
 Requires: steps (list of tuples), current_step (int), pk{% endcomment %}
+{% if is_locked %}
+<div class="alert mb-4 d-flex align-items-center gap-2" role="alert"
+     style="background:#fff3cd; border:1px solid #ffc107; border-radius:6px; font-size:0.88rem;">
+  <i class="bi bi-lock-fill" style="font-size:1.1rem; color:#856404;"></i>
+  <div>
+    <strong>This return is locked.</strong>
+    Submissions for {{ obj.data_year }} have been locked by NTA staff. You can view your return but cannot make any changes.
+  </div>
+</div>
+{% endif %}
 <div class="stepper">
   {% for slug, label, num in steps %}
     {% if num > 1 %}

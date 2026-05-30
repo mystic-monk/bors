@@ -60,7 +60,12 @@
   <div class="card-body">
     <form method="post" enctype="multipart/form-data" class="row g-3 align-items-end">
       {% csrf_token %}
-      <div class="col-md-6">
+      <div class="col-md-2">
+        <label class="form-label">Data Year</label>
+        <input type="number" name="data_year" value="{{ current_year }}"
+               min="2000" max="2100" class="form-control form-control-sm" required>
+      </div>
+      <div class="col-md-5">
         <label class="form-label">Excel File (.xlsx)</label>
         <input type="file" name="seed_file" accept=".xlsx" class="form-control form-control-sm" required>
       </div>
@@ -94,7 +99,15 @@
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h5>Current Seed Data</h5>
-    <span class="badge bg-light text-dark">{{ accesses.count }} operators</span>
+    <div class="d-flex align-items-center gap-3">
+      <form method="get" class="d-flex align-items-center gap-2 mb-0">
+        <label class="form-label mb-0" style="font-size:0.85rem; white-space:nowrap;">Filter by year:</label>
+        <input type="number" name="view_year" value="{{ view_year|default:current_year }}"
+               min="2000" max="2100" class="form-control form-control-sm" style="width:90px;">
+        <button type="submit" class="btn btn-sm btn-outline-secondary">Go</button>
+      </form>
+      <span class="badge bg-light text-dark">{{ accesses.count }} operators</span>
+    </div>
   </div>
 
   {% if accesses %}
@@ -105,8 +118,8 @@
           <th style="width:22%;">Operator</th>
           <th style="width:22%;">Email</th>
           <th style="width:8%;">Status</th>
-          <th>Seeded Routes</th>
-          <th>Seeded Vehicles</th>
+          <th>Seeded Routes ({{ view_year|default:current_year }})</th>
+          <th>Seeded Vehicles ({{ view_year|default:current_year }})</th>
         </tr>
       </thead>
       <tbody>
@@ -147,7 +160,7 @@
   </div>
   {% else %}
   <div class="card-body text-center py-4 text-muted" style="font-size:0.88rem;">
-    No operators yet. Upload a file with an Operators sheet above.
+    No seed data for {{ view_year|default:current_year }}. Upload a file above.
   </div>
   {% endif %}
 </div>

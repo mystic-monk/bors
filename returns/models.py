@@ -1,5 +1,6 @@
 import secrets
 from django.db import models
+from django.utils import timezone
 
 COUNTY_CHOICES = [
     ('Antrim', 'Antrim'), ('Armagh', 'Armagh'), ('Carlow', 'Carlow'),
@@ -166,15 +167,16 @@ class SeedLicence(models.Model):
     operator_access = models.ForeignKey(
         OperatorAccess, on_delete=models.CASCADE, related_name='seed_licences'
     )
+    year = models.PositiveIntegerField()
     route_no = models.CharField(max_length=50)
 
     class Meta:
-        unique_together = [['operator_access', 'route_no']]
-        ordering = ['route_no']
+        unique_together = [['operator_access', 'year', 'route_no']]
+        ordering = ['year', 'route_no']
         verbose_name = 'Seed Licence'
 
     def __str__(self):
-        return f'{self.operator_access.operator_name} — Route {self.route_no}'
+        return f'{self.operator_access.operator_name} — Route {self.route_no} ({self.year})'
 
 
 class SeedVehicle(models.Model):
@@ -182,6 +184,7 @@ class SeedVehicle(models.Model):
     operator_access = models.ForeignKey(
         OperatorAccess, on_delete=models.CASCADE, related_name='seed_vehicles'
     )
+    year = models.PositiveIntegerField()
     res_id = models.CharField(max_length=50, blank=True)
     vehicle_reg = models.CharField(max_length=20)
     make = models.CharField(max_length=100, blank=True)
@@ -191,12 +194,12 @@ class SeedVehicle(models.Model):
     seats_on_record = models.PositiveIntegerField(null=True, blank=True)
 
     class Meta:
-        unique_together = [['operator_access', 'vehicle_reg']]
-        ordering = ['res_id', 'vehicle_reg']
+        unique_together = [['operator_access', 'year', 'vehicle_reg']]
+        ordering = ['year', 'res_id', 'vehicle_reg']
         verbose_name = 'Seed Vehicle'
 
     def __str__(self):
-        return f'{self.operator_access.operator_name} — {self.vehicle_reg}'
+        return f'{self.operator_access.operator_name} — {self.vehicle_reg} ({self.year})'
 
 
 class VehicleRouteUsage(models.Model):
@@ -241,6 +244,20 @@ class VehicleAccessibility(models.Model):
 
     def __str__(self):
         return f'{self.vehicle_reg} — accessibility'
+
+
+class YearLock(models.Model):
+    """Staff can lock a data year to prevent operators editing or submitting returns for that year."""
+    year = models.PositiveIntegerField(unique=True)
+    locked_by = models.CharField(max_length=200, blank=True)
+    locked_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = 'Year Lock'
+        ordering = ['-year']
+
+    def __str__(self):
+        return f'{self.year} (locked)'
 
 
 class Declaration(models.Model):

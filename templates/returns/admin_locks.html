@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}BORS — Year Locks{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h4 mb-1" style="color:var(--app-navy); font-weight:700;">
+      <i class="bi bi-lock me-2"></i>Year Locks
+    </h1>
+    <p class="text-muted mb-0" style="font-size:0.85rem;">
+      Lock a data year to prevent operators editing or submitting returns for that year.
+    </p>
+  </div>
+  <a href="{% url 'admin_tokens' %}" class="btn btn-sm btn-app-secondary">
+    <i class="bi bi-arrow-left me-1"></i> Back to Tokens
+  </a>
+</div>
+
+{# ── Lock a year ── #}
+<div class="card mb-4">
+  <div class="card-header">
+    <h5><i class="bi bi-lock-fill me-2"></i>Lock a Year</h5>
+    <div class="sub">
+      Once locked, operators cannot save or submit returns for that year. They can still view and download their submitted return.
+    </div>
+  </div>
+  <div class="card-body">
+    <form method="post" class="row g-3 align-items-end">
+      {% csrf_token %}
+      <div class="col-md-3">
+        <label class="form-label">Data Year to Lock</label>
+        <input type="number" name="year" value="{{ current_year }}"
+               min="2000" max="2100" class="form-control form-control-sm" required>
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-warning w-100">
+          <i class="bi bi-lock me-1"></i> Lock Year
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ── Currently locked years ── #}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5>Currently Locked Years</h5>
+    <span class="badge bg-light text-dark">{{ locks.count }} locked</span>
+  </div>
+
+  {% if locks %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle" style="font-size:0.88rem;">
+      <thead class="table-light">
+        <tr>
+          <th style="width:15%;">Year</th>
+          <th style="width:25%;">Locked By</th>
+          <th style="width:25%;">Locked At</th>
+          <th style="text-align:right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lock in locks %}
+        <tr>
+          <td>
+            <span class="badge px-3 py-2" style="background:#fff3cd; color:#856404; border:1px solid #ffc107; font-size:0.88rem;">
+              <i class="bi bi-lock-fill me-1"></i>{{ lock.year }}
+            </span>
+          </td>
+          <td style="color:#555;">{{ lock.locked_by|default:"—" }}</td>
+          <td style="color:#888; font-size:0.82rem;">{{ lock.locked_at|date:"d M Y, H:i" }}</td>
+          <td class="text-end">
+            <form method="post" action="{% url 'unlock_year' year=lock.year %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-success"
+                onclick="return confirm('Unlock {{ lock.year }}? Operators will be able to edit and submit returns again.')">
+                <i class="bi bi-unlock me-1"></i> Unlock
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="card-body text-center py-4 text-muted" style="font-size:0.88rem;">
+    <i class="bi bi-unlock" style="font-size:1.5rem; opacity:0.4;"></i>
+    <p class="mt-2 mb-0">No years are currently locked. All operators can edit and submit their returns.</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

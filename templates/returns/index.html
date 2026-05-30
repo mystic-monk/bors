@@ -141,8 +141,23 @@
       </div>
     </div>
 
+    {% if is_locked %}
+    <div class="alert mb-3 d-flex align-items-center gap-2" role="alert"
+         style="background:#fff3cd; border:1px solid #ffc107; border-radius:6px; font-size:0.86rem;">
+      <i class="bi bi-lock-fill" style="color:#856404;"></i>
+      <span><strong>Locked by NTA staff.</strong> Submissions for {{ operator_return.data_year }} are closed — no changes can be made.</span>
+    </div>
+    {% endif %}
+
     <div class="d-flex gap-2 flex-wrap">
-      {% if operator_return.status == 'draft' %}
+      {% if is_locked %}
+      <a href="{% url 'step_general' pk=operator_return.pk %}" class="btn btn-app-secondary">
+        <i class="bi bi-eye me-1"></i> View return (read-only)
+      </a>
+      <a href="{% url 'export_excel' pk=operator_return.pk %}" class="btn btn-outline-success">
+        <i class="bi bi-file-earmark-excel me-1"></i> Download Excel
+      </a>
+      {% elif operator_return.status == 'draft' %}
       <a href="{% url 'step_general' pk=operator_return.pk %}" class="btn btn-app-primary">
         <i class="bi bi-pencil-square me-1"></i> Continue filling in return
       </a>
@@ -174,6 +189,8 @@
   </div>
 </div>
 {% endif %}
+{# Note: locking is enforced at the server — the start-return button above leads to step_general
+   which will refuse to save if the submitted year is locked. #}
 
 <script>
   (function () {

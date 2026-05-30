@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import OperatorReturn, LicenceReturn, VehicleEmission, VehicleAccessibility, OperatorAccess
+from .models import OperatorReturn, LicenceReturn, VehicleEmission, VehicleAccessibility, OperatorAccess, SeedLicence, SeedVehicle, YearLock
 
 
 class LicenceInline(admin.TabularInline):
@@ -70,3 +70,25 @@ class OperatorAccessAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
+
+
+@admin.register(SeedLicence)
+class SeedLicenceAdmin(admin.ModelAdmin):
+    list_display = ['operator_access', 'year', 'route_no']
+    list_filter = ['year']
+    search_fields = ['route_no', 'operator_access__operator_name']
+    ordering = ['year', 'operator_access__operator_name', 'route_no']
+
+
+@admin.register(SeedVehicle)
+class SeedVehicleAdmin(admin.ModelAdmin):
+    list_display = ['operator_access', 'year', 'vehicle_reg', 'res_id', 'make', 'model_version', 'transmission', 'engine_type', 'seats_on_record']
+    list_filter = ['year', 'transmission', 'engine_type']
+    search_fields = ['vehicle_reg', 'res_id', 'make', 'operator_access__operator_name']
+    ordering = ['year', 'operator_access__operator_name', 'vehicle_reg']
+
+
+@admin.register(YearLock)
+class YearLockAdmin(admin.ModelAdmin):
+    list_display = ['year', 'locked_by', 'locked_at']
+    readonly_fields = ['locked_at']
