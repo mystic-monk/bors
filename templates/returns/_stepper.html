@@ -9,6 +9,18 @@ Requires: steps (list of tuples), current_step (int), pk{% endcomment %}
     Submissions for {{ obj.data_year }} have been locked by NTA staff. You can view your return but cannot make any changes.
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('form[method="post"]').forEach(function (form) {
+    Array.from(form.elements).forEach(function (el) {
+      el.disabled = true;
+    });
+    form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (btn) {
+      btn.style.display = 'none';
+    });
+  });
+});
+</script>
 {% endif %}
 <div class="stepper">
   {% for slug, label, num in steps %}
